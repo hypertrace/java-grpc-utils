@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
+import static io.grpc.Metadata.BINARY_BYTE_MARSHALLER;
 
 public abstract class RequestContextAsCreds extends CallCredentials {
   private static Logger LOGGER = LoggerFactory.getLogger(RequestContextAsCreds.class);
@@ -31,7 +32,12 @@ public abstract class RequestContextAsCreds extends CallCredentials {
       for (Map.Entry<String, String> entry : requestContext.getAll().entrySet()) {
         // Exclude null headers
         if (entry.getValue() != null) {
-          metadata.put(Metadata.Key.of(entry.getKey(), ASCII_STRING_MARSHALLER), entry.getValue());
+          String key = entry.getKey();
+          if (key.endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
+            metadata.put(Metadata.Key.of(entry.getKey(), BINARY_BYTE_MARSHALLER), entry.getValue().getBytes());
+          } else {
+            metadata.put(Metadata.Key.of(entry.getKey(), ASCII_STRING_MARSHALLER), entry.getValue());
+          }
         }
       }
     }
