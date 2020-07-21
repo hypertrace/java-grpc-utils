@@ -43,5 +43,19 @@ public class RequestContextServerInterceptorTests {
     Assertions.assertEquals(2, requestContext.getAll().size());
     Assertions.assertEquals("Bearer Some-bearer-auth-2", requestContext.get("authorization").get());
     Assertions.assertEquals("test-tenant-id-2", requestContext.get(RequestContextConstants.TENANT_ID_METADATA_KEY.name()).get());
+
+
+    metadata = new Metadata();
+    metadata.put(Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER), "Bearer Some-bearer-auth-3");
+    metadata.put(Metadata.Key.of("X-tenant-Id", Metadata.ASCII_STRING_MARSHALLER), "test-tenant-id-3");
+    metadata.put(Metadata.Key.of("X-Some-Other-Header", Metadata.ASCII_STRING_MARSHALLER), "Some-other-header-val-3");
+    metadata.put(Metadata.Key.of("grpc-trace-bin", Metadata.BINARY_BYTE_MARSHALLER), "AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE".getBytes());
+
+    requestContext = interceptor.createRequestContextFromMetadata(metadata);
+
+    Assertions.assertEquals(3, requestContext.getAll().size());
+    Assertions.assertEquals("Bearer Some-bearer-auth-3", requestContext.get("authorization").get());
+    Assertions.assertEquals("test-tenant-id-3", requestContext.get(RequestContextConstants.TENANT_ID_METADATA_KEY.name()).get());
+    Assertions.assertEquals("AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE", requestContext.get("grpc-trace-bin").get());
   }
 }

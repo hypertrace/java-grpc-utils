@@ -12,6 +12,7 @@ import org.hypertrace.core.grpcutils.context.RequestContextConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import static io.grpc.Metadata.BINARY_BYTE_MARSHALLER;
 import static org.mockito.Mockito.mock;
 
 public class ContextKeyBasedCredsTest {
@@ -29,6 +30,8 @@ public class ContextKeyBasedCredsTest {
     requestContext.add(RequestContextConstants.TENANT_ID_HEADER_KEY, TENANT_ID);
     requestContext.add(RequestContextConstants.AUTHORIZATION_HEADER, TEST_AUTH_HEADER);
     requestContext.add("x-some-tenant-header", "v1");
+    requestContext.add("grpc-trace-bin", "AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE");
+
 
     Context ctx = Context.current().withValue(RequestContext.CURRENT, requestContext);
 
@@ -38,14 +41,23 @@ public class ContextKeyBasedCredsTest {
         @Override
         public void apply(Metadata headers) {
           Map<String, String> headersMap = headers.keys().stream()
-              .collect(Collectors.toUnmodifiableMap(k -> k, k -> headers.get(Metadata.Key.of(k, Metadata.ASCII_STRING_MARSHALLER))));
+              .collect(Collectors.toUnmodifiableMap(k -> k, k -> {
+                String value;
+                if (k.toLowerCase().endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
+                  value = new String(headers.get(Metadata.Key.of(k, Metadata.BINARY_BYTE_MARSHALLER)));
+                } else {
+                  value = headers.get(Metadata.Key.of(k, Metadata.ASCII_STRING_MARSHALLER));
+                }
+                return value;
+              } ));
 
           // Should filter out the TENANT_ID_HEADER_KEY
           Assertions.assertEquals(
               Map.of(
                   RequestContextConstants.TENANT_ID_HEADER_KEY, TENANT_ID,
                   RequestContextConstants.AUTHORIZATION_HEADER, TEST_AUTH_HEADER,
-                  "x-some-tenant-header", "v1"
+                  "x-some-tenant-header", "v1",
+                  "grpc-trace-bin", "AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE"
               ),
               headersMap);
         }

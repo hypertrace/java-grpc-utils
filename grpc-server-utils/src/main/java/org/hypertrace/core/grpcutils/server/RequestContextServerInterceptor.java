@@ -9,6 +9,8 @@ import io.grpc.ServerInterceptor;
 import org.hypertrace.core.grpcutils.context.RequestContext;
 import org.hypertrace.core.grpcutils.context.RequestContextConstants;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * Interceptor which intercepts the request headers to extract request context and sets it in the context so that the
  * server logic can use the context and they can be passed onto other downstream services.
@@ -41,7 +43,14 @@ public class RequestContextServerInterceptor implements ServerInterceptor {
             RequestContextConstants.HEADER_PREFIXES_TO_BE_PROPAGATED.stream()
                 .anyMatch(prefix -> k.toLowerCase().startsWith(prefix.toLowerCase())))
         .forEach(k -> {
-          String value = metadata.get(Metadata.Key.of(k, Metadata.ASCII_STRING_MARSHALLER));
+          String value;
+          //check if key ends with binary suffix
+          if (k.toLowerCase().endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
+            byte[] bytes = metadata.get(Metadata.Key.of(k, Metadata.BINARY_BYTE_MARSHALLER));
+            value = new String(bytes, StandardCharsets.UTF_8);
+          } else {
+            value = metadata.get(Metadata.Key.of(k, Metadata.ASCII_STRING_MARSHALLER));
+          }
           // The value could be null or empty for some keys so validate that.
           if (value != null && !value.isEmpty()) {
             requestContext.add(k, value);

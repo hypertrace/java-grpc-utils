@@ -62,6 +62,26 @@ public class GrpcClientRequestContextUtilTest {
   }
 
   @Test
+  public void testExecuteWithHeadersContextAuthAndTracing_shouldPropagateAllHeaders() {
+    Context ctx = Context.current();
+    Context previous = ctx.attach();
+    try {
+      Map<String, String> requestHeaders = Map.of("authorization", "v1", "a2", "v2",
+        "grpc-trace-bin", "AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE");
+
+      GrpcClientRequestContextUtil.executeWithHeadersContext(requestHeaders, () -> {
+        RequestContext requestContext = RequestContext.CURRENT.get();
+        Assertions.assertEquals(Map.of("authorization", "v1", "a2", "v2",
+          "grpc-trace-bin", "AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE"), requestContext.getRequestHeaders());
+        return new Object();
+      });
+    } finally {
+      ctx.detach(previous);
+    }
+  }
+
+
+  @Test
   public void testExecuteInTenantIdContext() {
     Assertions.assertNull(RequestContext.CURRENT.get());
     Assertions.assertEquals(Optional.of(TENANT_ID),
