@@ -45,7 +45,7 @@ public class RequestContextServerInterceptor implements ServerInterceptor {
         .forEach(k -> {
           String value;
           //check if key ends with binary suffix
-          if (k.endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
+          if (k.toLowerCase().endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
             byte[] bytes = metadata.get(Metadata.Key.of(k, Metadata.BINARY_BYTE_MARSHALLER));
             value = new String(bytes, StandardCharsets.UTF_8);
           } else {

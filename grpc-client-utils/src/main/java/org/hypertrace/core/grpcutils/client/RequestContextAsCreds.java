@@ -33,7 +33,7 @@ public abstract class RequestContextAsCreds extends CallCredentials {
         // Exclude null headers
         if (entry.getValue() != null) {
           String key = entry.getKey();
-          if (key.endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
+          if (key.toLowerCase().endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
             metadata.put(Metadata.Key.of(entry.getKey(), BINARY_BYTE_MARSHALLER), entry.getValue().getBytes());
           } else {
             metadata.put(Metadata.Key.of(entry.getKey(), ASCII_STRING_MARSHALLER), entry.getValue());
