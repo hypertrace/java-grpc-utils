@@ -11,7 +11,7 @@ tasks.test {
 
 dependencies {
   // grpc
-  implementation("io.grpc:grpc-core:1.30.2")
+  implementation("io.grpc:grpc-core:1.31.0")
 
   // Logging
   implementation("org.slf4j:slf4j-api:1.7.30")
