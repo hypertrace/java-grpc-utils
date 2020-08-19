@@ -1,0 +1,42 @@
+package org.hypertrace.core.grpcutils.client.rx;
+
+import io.grpc.Context;
+import io.grpc.stub.StreamObserver;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+import org.hypertrace.core.grpcutils.context.RequestContext;
+
+class DefaultGrpcRxExecutionContext implements GrpcRxExecutionContext {
+
+  private final RequestContext requestContext;
+
+  DefaultGrpcRxExecutionContext(RequestContext requestContext) {
+    this.requestContext = requestContext;
+  }
+
+  @Override
+  public <TResp> Single<TResp> call(Callable<TResp> callable) {
+    return Single.fromCallable(buildContext().wrap(callable));
+  }
+
+  @Override
+  public Completable run(Runnable runnable) {
+    return Completable.fromRunnable(buildContext().wrap(runnable));
+  }
+
+  @Override
+  public <TResponse> Observable<TResponse> stream(
+      Consumer<StreamObserver<TResponse>> streamConsumer) {
+    return Observable.create(
+        emitter ->
+            buildContext()
+                .run(() -> streamConsumer.accept(new StreamingClientResponseObserver<>(emitter))));
+  }
+
+  private Context buildContext() {
+    return Context.current().withValue(RequestContext.CURRENT, this.requestContext);
+  }
+}

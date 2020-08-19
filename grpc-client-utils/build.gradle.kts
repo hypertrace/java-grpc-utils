@@ -5,10 +5,6 @@ plugins {
   id("org.hypertrace.jacoco-report-plugin")
 }
 
-tasks.test {
-  useJUnitPlatform()
-}
-
 dependencies {
   implementation(project(":grpc-context-utils"))
 
@@ -17,9 +13,12 @@ dependencies {
   // End Logging
 
   // grpc
-  implementation("io.grpc:grpc-core:1.31.0")
+  implementation("io.grpc:grpc-core:1.31.1")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
   testImplementation("org.mockito:mockito-core:3.4.4")
 }
 
+tasks.test {
+  useJUnitPlatform()
+}
