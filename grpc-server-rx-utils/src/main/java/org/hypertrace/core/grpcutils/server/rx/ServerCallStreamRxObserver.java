@@ -13,7 +13,7 @@ public class ServerCallStreamRxObserver<T> extends DefaultObserver<T>
 
   private final ServerCallStreamObserver<T> serverCallStreamObserver;
 
-  ServerCallStreamRxObserver(ServerCallStreamObserver<T> serverCallStreamObserver) {
+  public ServerCallStreamRxObserver(ServerCallStreamObserver<T> serverCallStreamObserver) {
     this.serverCallStreamObserver = serverCallStreamObserver;
   }
 
