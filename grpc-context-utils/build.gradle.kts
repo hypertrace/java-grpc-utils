@@ -11,11 +11,11 @@ tasks.test {
 
 dependencies {
   // grpc
-  implementation("io.grpc:grpc-core:1.31.1")
+  implementation("io.grpc:grpc-core:1.32.1")
 
   // Logging
   implementation("org.slf4j:slf4j-api:1.7.30")
   // End Logging
 
-  testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
 }
