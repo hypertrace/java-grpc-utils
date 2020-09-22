@@ -8,8 +8,6 @@ plugins {
 dependencies {
   api("io.reactivex.rxjava3:rxjava:3.0.6")
   api("io.grpc:grpc-stub:1.32.1")
-  api(project(":grpc-context-utils"))
-  implementation("io.grpc:grpc-context:1.32.1")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
   testImplementation("org.mockito:mockito-core:3.5.11")

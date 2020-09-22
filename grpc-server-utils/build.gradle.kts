@@ -17,7 +17,7 @@ dependencies {
   // End Logging
 
   // grpc
-  implementation("io.grpc:grpc-core:1.31.1")
+  implementation("io.grpc:grpc-core:1.32.1")
 
-  testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
 }
