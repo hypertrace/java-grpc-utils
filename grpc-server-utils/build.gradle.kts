@@ -17,7 +17,12 @@ dependencies {
   // End Logging
 
   // grpc
-  implementation("io.grpc:grpc-core:1.32.1")
+  implementation("io.grpc:grpc-core:1.33.1")
+  constraints {
+    implementation("com.google.guava:guava:30.0-jre") {
+      because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLEGUAVA-1015415")
+    }
+  }
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
 }
