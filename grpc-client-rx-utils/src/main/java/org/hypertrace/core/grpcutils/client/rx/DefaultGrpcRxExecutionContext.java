@@ -7,6 +7,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.hypertrace.core.grpcutils.context.RequestContext;
 
 class DefaultGrpcRxExecutionContext implements GrpcRxExecutionContext {
@@ -20,6 +21,15 @@ class DefaultGrpcRxExecutionContext implements GrpcRxExecutionContext {
   @Override
   public <TResp> Single<TResp> call(Callable<TResp> callable) {
     return Single.fromCallable(buildContext().wrap(callable));
+  }
+
+  @Override
+  public <TResp> Single<TResp> wrapSingle(Supplier<Single<TResp>> singleSupplier) {
+    try {
+      return buildContext().call(singleSupplier::get);
+    } catch (Exception e) {
+      return Single.error(e);
+    }
   }
 
   @Override

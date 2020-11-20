@@ -76,4 +76,13 @@ class DefaultGrpcRxExecutionContextTest {
     completable.subscribe(testObserver);
     testObserver.assertError(UnsupportedOperationException.class);
   }
+
+  @Test
+  void canWrapSingle() {
+    Single<?> single =
+        new DefaultGrpcRxExecutionContext(this.mockContext)
+            .wrapSingle(() -> Single.just(RequestContext.CURRENT.get().getTenantId()));
+
+    assertEquals(TEST_TENANT_ID_OPTIONAL, single.blockingGet());
+  }
 }

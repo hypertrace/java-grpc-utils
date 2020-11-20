@@ -6,6 +6,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.hypertrace.core.grpcutils.context.RequestContext;
 
 /** An execution context that can turn various types of executions into their Rx equivalents. */
@@ -15,6 +16,11 @@ public interface GrpcRxExecutionContext {
    * {@link Single}.
    */
   <TResp> Single<TResp> call(Callable<TResp> callable);
+
+  /**
+   * Creates the provided single in this execution context, returning the result.
+   */
+  <TResp> Single<TResp> wrapSingle(Supplier<Single<TResp>> singleSupplier);
 
   /**
    * Executes the given runnable in this execution context, triggering completion or error once the
