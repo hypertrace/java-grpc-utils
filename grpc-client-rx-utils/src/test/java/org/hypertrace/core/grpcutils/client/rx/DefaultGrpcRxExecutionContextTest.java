@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.TestObserver;
@@ -75,5 +76,23 @@ class DefaultGrpcRxExecutionContextTest {
     TestObserver<?> testObserver = new TestObserver<>();
     completable.subscribe(testObserver);
     testObserver.assertError(UnsupportedOperationException.class);
+  }
+
+  @Test
+  void canWrapSingle() {
+    Single<?> single =
+        new DefaultGrpcRxExecutionContext(this.mockContext)
+            .wrapSingle(() -> Single.just(RequestContext.CURRENT.get().getTenantId()));
+
+    assertEquals(TEST_TENANT_ID_OPTIONAL, single.blockingGet());
+  }
+
+  @Test
+  void canWrapMaybe() {
+    Maybe<?> maybe =
+        new DefaultGrpcRxExecutionContext(this.mockContext)
+            .wrapMaybe(() -> Maybe.just(RequestContext.CURRENT.get().getTenantId()));
+
+    assertEquals(TEST_TENANT_ID_OPTIONAL, maybe.blockingGet());
   }
 }

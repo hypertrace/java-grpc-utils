@@ -6,25 +6,26 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Context of the GRPC request that should be carried and can made available to the services
- * so that the service can use them.
- * We use this to propagate headers across services.
+ * Context of the GRPC request that should be carried and can made available to the services so that
+ * the service can use them. We use this to propagate headers across services.
  */
 public class RequestContext {
   public static final Context.Key<RequestContext> CURRENT = Context.key("request_context");
 
+  public static RequestContext forTenantId(String tenantId) {
+    RequestContext requestContext = new RequestContext();
+    requestContext.add(RequestContextConstants.TENANT_ID_HEADER_KEY, tenantId);
+    return requestContext;
+  }
+
   private final Map<String, String> headers = new HashMap<>();
 
-  /**
-   * Reads tenant id from this RequestContext based on the tenant id http header and returns it.
-   */
+  /** Reads tenant id from this RequestContext based on the tenant id http header and returns it. */
   public Optional<String> getTenantId() {
     return get(RequestContextConstants.TENANT_ID_HEADER_KEY);
   }
 
-  /**
-   * Method to read all GRPC request headers from this RequestContext.
-   */
+  /** Method to read all GRPC request headers from this RequestContext. */
   public Map<String, String> getRequestHeaders() {
     return getAll();
   }
