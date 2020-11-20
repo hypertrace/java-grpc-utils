@@ -3,6 +3,7 @@ package org.hypertrace.core.grpcutils.client.rx;
 import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import java.util.concurrent.Callable;
@@ -29,6 +30,15 @@ class DefaultGrpcRxExecutionContext implements GrpcRxExecutionContext {
       return buildContext().call(singleSupplier::get);
     } catch (Exception e) {
       return Single.error(e);
+    }
+  }
+
+  @Override
+  public <TResp> Maybe<TResp> wrapMaybe(Supplier<Maybe<TResp>> maybeSupplier) {
+    try {
+      return buildContext().call(maybeSupplier::get);
+    } catch (Exception e) {
+      return Maybe.error(e);
     }
   }
 

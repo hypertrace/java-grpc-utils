@@ -2,6 +2,7 @@ package org.hypertrace.core.grpcutils.client.rx;
 
 import io.grpc.stub.StreamObserver;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import java.util.concurrent.Callable;
@@ -21,6 +22,11 @@ public interface GrpcRxExecutionContext {
    * Creates the provided single in this execution context, returning the result.
    */
   <TResp> Single<TResp> wrapSingle(Supplier<Single<TResp>> singleSupplier);
+
+  /**
+   * Creates the provided maybe in this execution context, returning the result.
+   */
+  <TResp> Maybe<TResp> wrapMaybe(Supplier<Maybe<TResp>> maybeSupplier);
 
   /**
    * Executes the given runnable in this execution context, triggering completion or error once the
