@@ -34,4 +34,8 @@ public interface GrpcRxExecutionContext {
   static GrpcRxExecutionContext forContext(RequestContext requestContext) {
     return new DefaultGrpcRxExecutionContext(requestContext);
   }
+
+  static GrpcRxExecutionContext forTenantContext(String tenantId) {
+    return forContext(RequestContext.forTenantId(tenantId));
+  }
 }

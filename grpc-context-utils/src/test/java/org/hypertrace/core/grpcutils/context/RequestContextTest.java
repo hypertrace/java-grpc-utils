@@ -5,9 +5,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link RequestContext} and utility methods in it.
- */
+/** Unit tests for {@link RequestContext} and utility methods in it. */
 public class RequestContextTest {
   private static final String TENANT_ID = "example-tenant-id";
   private static final String TEST_AUTH_HEADER = "Bearer sample-auth-header";
@@ -34,9 +32,20 @@ public class RequestContextTest {
 
     Assertions.assertEquals(
         Map.of(
-            RequestContextConstants.AUTHORIZATION_HEADER, TEST_AUTH_HEADER,
-            "x-some-tenant-header", "v1"
-        ),
+            RequestContextConstants.AUTHORIZATION_HEADER,
+            TEST_AUTH_HEADER,
+            "x-some-tenant-header",
+            "v1"),
         requestHeaders);
+  }
+
+  @Test
+  public void testCreateForTenantId() {
+    RequestContext requestContext = RequestContext.forTenantId(TENANT_ID);
+    Assertions.assertEquals(Optional.of(TENANT_ID), requestContext.getTenantId());
+    Assertions.assertEquals(
+        Optional.of(TENANT_ID), requestContext.get(RequestContextConstants.TENANT_ID_HEADER_KEY));
+    Assertions.assertEquals(
+        Map.of(RequestContextConstants.TENANT_ID_HEADER_KEY, TENANT_ID), requestContext.getAll());
   }
 }
