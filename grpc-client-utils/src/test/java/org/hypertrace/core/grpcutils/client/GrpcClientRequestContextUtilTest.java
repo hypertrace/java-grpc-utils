@@ -121,7 +121,18 @@ public class GrpcClientRequestContextUtilTest {
   }
 
   @Test
-  public void testExecuteWithHeadersContextThrowsRuntimeExceptionWhenRunnableThrowsException() {
+  public void testExecuteWithHeadersContextRethrowsRuntimeException() {
+    Map<String, String> headers = Map.of("a1", "v1", "a2", "v2");
+    Assertions.assertThrows(IllegalArgumentException.class, () -> {
+      GrpcClientRequestContextUtil.executeWithHeadersContext(headers,
+          () -> {
+            throw new IllegalArgumentException("test exception");
+          });
+    });
+  }
+
+  @Test
+  public void testExecuteWithHeadersContextWrapsCheckedException() {
     Map<String, String> headers = Map.of("a1", "v1", "a2", "v2");
     Assertions.assertThrows(RuntimeException.class, () -> {
       GrpcClientRequestContextUtil.executeWithHeadersContext(headers,

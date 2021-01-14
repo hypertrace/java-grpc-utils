@@ -7,14 +7,9 @@ plugins {
 
 dependencies {
   api("io.reactivex.rxjava3:rxjava:3.0.6")
-  api("io.grpc:grpc-stub:1.33.1")
+  api("io.grpc:grpc-stub:1.35.0")
   api(project(":grpc-context-utils"))
-  implementation("io.grpc:grpc-context:1.33.1")
-  constraints {
-    implementation("com.google.guava:guava:30.0-jre") {
-      because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLEGUAVA-1015415")
-    }
-  }
+  implementation("io.grpc:grpc-context:1.35.0")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
   testImplementation("org.mockito:mockito-core:3.5.11")
