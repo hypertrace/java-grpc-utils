@@ -44,6 +44,9 @@ public class GrpcClientRequestContextUtil {
     try {
       return Context.current().withValue(RequestContext.CURRENT, requestContext).call(c);
     } catch (Exception e) {
+      if (e instanceof RuntimeException) {
+        throw (RuntimeException)e;
+      }
       throw new RuntimeException(e);
     }
   }
@@ -58,10 +61,6 @@ public class GrpcClientRequestContextUtil {
     RequestContext requestContext = new RequestContext();
     headers.forEach(requestContext::add);
 
-    try {
-      Context.current().withValue(RequestContext.CURRENT, requestContext).run(r);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    Context.current().withValue(RequestContext.CURRENT, requestContext).run(r);
   }
 }

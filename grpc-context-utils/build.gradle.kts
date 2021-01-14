@@ -11,7 +11,7 @@ tasks.test {
 
 dependencies {
   // grpc
-  implementation("io.grpc:grpc-core:1.33.1")
+  implementation("io.grpc:grpc-core:1.35.0")
   constraints {
     implementation("com.google.guava:guava:30.0-jre") {
       because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLEGUAVA-1015415")
