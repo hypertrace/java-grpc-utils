@@ -1,6 +1,5 @@
 package org.hypertrace.core.grpcutils.client;
 
-import io.grpc.Context;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
@@ -40,15 +39,7 @@ public class GrpcClientRequestContextUtil {
   public static <V> V executeWithHeadersContext(@Nonnull Map<String, String> headers, @Nonnull Callable<V> c) {
     RequestContext requestContext = new RequestContext();
     headers.forEach(requestContext::add);
-
-    try {
-      return Context.current().withValue(RequestContext.CURRENT, requestContext).call(c);
-    } catch (Exception e) {
-      if (e instanceof RuntimeException) {
-        throw (RuntimeException)e;
-      }
-      throw new RuntimeException(e);
-    }
+    return requestContext.call(c);
   }
 
   /**
@@ -60,7 +51,6 @@ public class GrpcClientRequestContextUtil {
   public static void executeWithHeadersContext(@Nonnull Map<String, String> headers, @Nonnull Runnable r) {
     RequestContext requestContext = new RequestContext();
     headers.forEach(requestContext::add);
-
-    Context.current().withValue(RequestContext.CURRENT, requestContext).run(r);
+    requestContext.run(r);
   }
 }
