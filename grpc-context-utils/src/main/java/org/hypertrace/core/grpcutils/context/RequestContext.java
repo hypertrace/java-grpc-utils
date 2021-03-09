@@ -4,6 +4,8 @@ import io.grpc.Context;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import javax.annotation.Nonnull;
 
 /**
  * Context of the GRPC request that should be carried and can made available to the services so that
@@ -40,5 +42,20 @@ public class RequestContext {
 
   public Map<String, String> getAll() {
     return Map.copyOf(headers);
+  }
+
+  public <V> V call(@Nonnull Callable<V> callable) {
+    try {
+      return Context.current().withValue(RequestContext.CURRENT, this).call(callable);
+    } catch (Exception e) {
+      if (e instanceof RuntimeException) {
+        throw (RuntimeException) e;
+      }
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void run(@Nonnull Runnable runnable) {
+    Context.current().withValue(RequestContext.CURRENT, this).run(runnable);
   }
 }
