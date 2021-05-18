@@ -1,9 +1,9 @@
-package org.hypertrace.core.grpcutils.context.jwt;
+package org.hypertrace.core.grpcutils.context;
 
 import java.util.Optional;
 
-public interface VerifiedJwt {
-  String getUserId();
+public interface Jwt {
+  Optional<String> getUserId();
 
   Optional<String> getName();
 

@@ -21,10 +21,31 @@ public class RequestContext {
   }
 
   private final Map<String, String> headers = new HashMap<>();
+  private final JwtParser jwtParser = new JwtParser();
 
   /** Reads tenant id from this RequestContext based on the tenant id http header and returns it. */
   public Optional<String> getTenantId() {
     return get(RequestContextConstants.TENANT_ID_HEADER_KEY);
+  }
+
+  public Optional<String> getUserId() {
+    return getJwt().flatMap(Jwt::getUserId);
+  }
+
+  public Optional<String> getName() {
+    return getJwt().flatMap(Jwt::getName);
+  }
+
+  public Optional<String> getPictureUrl() {
+    return getJwt().flatMap(Jwt::getPictureUrl);
+  }
+
+  public Optional<String> getEmail() {
+    return getJwt().flatMap(Jwt::getEmail);
+  }
+
+  private Optional<Jwt> getJwt() {
+    return get(RequestContextConstants.AUTHORIZATION_HEADER).flatMap(jwtParser::fromAuthHeader);
   }
 
   /** Method to read all GRPC request headers from this RequestContext. */
