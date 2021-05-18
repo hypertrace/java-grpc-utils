@@ -2,7 +2,7 @@ package org.hypertrace.core.grpcutils.context;
 
 import java.util.Optional;
 
-public interface Jwt {
+interface Jwt {
   Optional<String> getUserId();
 
   Optional<String> getName();
