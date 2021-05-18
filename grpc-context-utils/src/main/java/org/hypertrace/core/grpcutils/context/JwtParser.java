@@ -24,7 +24,7 @@ class JwtParser {
     return Optional.empty();
   }
 
-  private Optional<Jwt> fromJwt(String jwtValue) {
+  Optional<Jwt> fromJwt(String jwtValue) {
     try {
       return this.jwtCache.get(jwtValue, () -> this.decode(jwtValue));
     } catch (ExecutionException e) {

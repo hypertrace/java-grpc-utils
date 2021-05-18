@@ -22,4 +22,5 @@ dependencies {
   // End Logging
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
+  testImplementation("org.mockito:mockito-core:3.8.0")
 }
