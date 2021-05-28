@@ -80,7 +80,11 @@ public class RequestContext {
     Context.current().withValue(RequestContext.CURRENT, this).run(runnable);
   }
 
-  public <T> ContextualCacheKey<T> buildContextualCacheKey(T data) {
-    return new DefaultContextualCacheKey<>(this, data);
+  public <T> ContextualKey<T> buildContextualKey(T data) {
+    return new DefaultContextualKey<>(this, data);
+  }
+
+  public ContextualKey<Void> buildContextualKey() {
+    return new DefaultContextualKey<>(this, null);
   }
 }

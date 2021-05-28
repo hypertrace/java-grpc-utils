@@ -7,12 +7,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-class DefaultContextualCacheKey<T> implements ContextualCacheKey<T> {
+class DefaultContextualKey<T> implements ContextualKey<T> {
   private final RequestContext context;
   private final T data;
   private final Map<String, String> meaningfulContextHeaders;
 
-  DefaultContextualCacheKey(RequestContext context, T data) {
+  DefaultContextualKey(RequestContext context, T data) {
     this.context = context;
     this.data = data;
     this.meaningfulContextHeaders = this.extractMeaningfulHeaders(context.getRequestHeaders());
@@ -42,7 +42,7 @@ class DefaultContextualCacheKey<T> implements ContextualCacheKey<T> {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    DefaultContextualCacheKey<?> that = (DefaultContextualCacheKey<?>) o;
+    DefaultContextualKey<?> that = (DefaultContextualKey<?>) o;
     return Objects.equals(getData(), that.getData())
         && meaningfulContextHeaders.equals(that.meaningfulContextHeaders);
   }
@@ -54,7 +54,7 @@ class DefaultContextualCacheKey<T> implements ContextualCacheKey<T> {
 
   @Override
   public String toString() {
-    return "DefaultContextualCacheKey{"
+    return "DefaultContextualKey{"
         + "data="
         + data
         + ", meaningfulContextHeaders="
