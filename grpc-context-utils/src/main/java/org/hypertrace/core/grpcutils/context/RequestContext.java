@@ -79,4 +79,12 @@ public class RequestContext {
   public void run(@Nonnull Runnable runnable) {
     Context.current().withValue(RequestContext.CURRENT, this).run(runnable);
   }
+
+  public <T> ContextualKey<T> buildContextualKey(T data) {
+    return new DefaultContextualKey<>(this, data);
+  }
+
+  public ContextualKey<Void> buildContextualKey() {
+    return new DefaultContextualKey<>(this, null);
+  }
 }
