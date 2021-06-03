@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 class DefaultContextualKeyTest {
@@ -29,6 +30,11 @@ class DefaultContextualKeyTest {
                 + RequestContext.CURRENT.get().getTenantId().orElseThrow();
 
     assertEquals("returned: input for test-tenant", key.callInContext(testFunction));
+
+    Supplier<String> testSupplier =
+        () -> "returned for " + RequestContext.CURRENT.get().getTenantId().orElseThrow();
+
+    assertEquals("returned for test-tenant", key.callInContext(testSupplier));
   }
 
   @Test
@@ -47,6 +53,10 @@ class DefaultContextualKeyTest {
         .accept(any());
     key.runInContext(testConsumer);
     verify(testConsumer, times(1)).accept(eq("input"));
+
+    Runnable testRunnable = mock(Runnable.class);
+    key.runInContext(testRunnable);
+    verify(testRunnable, times(1)).run();
   }
 
   @Test

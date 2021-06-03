@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 class DefaultContextualKey<T> implements ContextualKey<T> {
@@ -34,8 +35,18 @@ class DefaultContextualKey<T> implements ContextualKey<T> {
   }
 
   @Override
+  public <R> R callInContext(Supplier<R> supplier) {
+    return this.context.call(supplier::get);
+  }
+
+  @Override
   public void runInContext(Consumer<T> consumer) {
     this.context.run(() -> consumer.accept(this.getData()));
+  }
+
+  @Override
+  public void runInContext(Runnable runnable) {
+    this.context.run(runnable);
   }
 
   @Override
