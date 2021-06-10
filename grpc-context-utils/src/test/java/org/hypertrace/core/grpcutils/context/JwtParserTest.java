@@ -9,6 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.Set;
+
+import com.google.common.collect.ImmutableSet;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 
@@ -19,6 +22,7 @@ class JwtParserTest {
   private final String testJwtName = "Johnny Rocket";
   private final String testJwtPictureUrl = "www.example.com";
   private final String testJwtEmail = "jrocket@example.com";
+  private final Set<String> testRoles = ImmutableSet.of("traceable", "user", "billing_admin");
 
   @Test
   void testGoodJwtParse() {
@@ -53,5 +57,12 @@ class JwtParserTest {
 
     assertEquals(Optional.empty(), parser.fromAuthHeader("Bad header"));
     verify(parser, times(0)).fromJwt(ArgumentMatchers.any());
+  }
+
+  @Test
+  void testTraceableRolesCanBeParsedFromToken() {
+    JwtParser parser = new JwtParser();
+    Optional<Jwt> jwt = parser.fromJwt(testJwt);
+    assertEquals(Optional.of(testRoles), jwt.flatMap(Jwt::getEmail));
   }
 }

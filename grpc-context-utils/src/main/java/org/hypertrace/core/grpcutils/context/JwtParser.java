@@ -5,6 +5,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -49,6 +50,7 @@ class JwtParser {
     private static final String NAME_CLAIM = "name";
     private static final String PICTURE_CLAIM = "picture";
     private static final String EMAIL_CLAIM = "email";
+    private static final String ROLES_CLAIM = "https://traceable.ai/roles";
 
     private DefaultJwt(DecodedJWT jwt) {
       this.jwt = jwt;
@@ -72,6 +74,11 @@ class JwtParser {
     @Override
     public Optional<String> getEmail() {
       return Optional.ofNullable(jwt.getClaim(EMAIL_CLAIM).asString());
+    }
+
+    @Override
+    public Set<String> getRoles() {
+      return null;
     }
   }
 }
