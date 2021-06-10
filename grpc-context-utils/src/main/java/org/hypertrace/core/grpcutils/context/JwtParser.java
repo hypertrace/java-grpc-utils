@@ -1,11 +1,14 @@
 package org.hypertrace.core.grpcutils.context;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -80,7 +83,11 @@ class JwtParser {
 
     @Override
     public Set<String> getRoles() {
-      return new HashSet<>(jwt.getClaim(ROLES_CLAIM).asList(String.class));
+      List<String> roles = jwt.getClaim(ROLES_CLAIM).asList(String.class);
+      if (roles == null || roles.isEmpty()) {
+        return Collections.emptySet();
+      }
+      return new HashSet<>(roles);
     }
   }
 }
