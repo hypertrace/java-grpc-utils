@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ import org.mockito.ArgumentMatchers;
 
 class JwtParserTest {
   private final String testJwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MjEzNjM1OTcsImV4cCI6MTY1Mjg5OTU5NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6IkpvaG5ueSIsIlN1cm5hbWUiOiJSb2NrZXQiLCJuYW1lIjoiSm9obm55IFJvY2tldCIsImVtYWlsIjoianJvY2tldEBleGFtcGxlLmNvbSIsInBpY3R1cmUiOiJ3d3cuZXhhbXBsZS5jb20iLCJodHRwczovL3RyYWNlYWJsZS5haS9yb2xlcyI6WyJ0cmFjZWFibGUiLCJ1c2VyIiwiYmlsbGluZ19hZG1pbiJdfQ.xdWar7cgJ_5V3SgECanVtBMhxJGb-DbeIfrKSpAQLJM";
+  private final String emptyRolesJwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MjEzNjM1OTcsImV4cCI6MTY1Mjg5OTU5NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6IkpvaG5ueSIsIlN1cm5hbWUiOiJSb2NrZXQiLCJuYW1lIjoiSm9obm55IFJvY2tldCIsImVtYWlsIjoianJvY2tldEBleGFtcGxlLmNvbSIsInBpY3R1cmUiOiJ3d3cuZXhhbXBsZS5jb20iLCJodHRwczovL3RyYWNlYWJsZS5haS9yb2xlcyI6W119.sFUMZNyypj379xy5P4kqTbBXBOR5XvX2nhpKx6YiiwU";
   private final String testJwtUserId = "jrocket@example.com";
   private final String testJwtName = "Johnny Rocket";
   private final String testJwtPictureUrl = "www.example.com";
@@ -63,5 +65,12 @@ class JwtParserTest {
     JwtParser parser = new JwtParser();
     Optional<Jwt> jwt = parser.fromJwt(testJwt);
     assertEquals(Optional.of(testRoles), jwt.flatMap(j -> Optional.of(j.getRoles())));
+  }
+
+  @Test
+  void testRolesAreEmptyIfRolesArrayIsEmptyInJwt() {
+    JwtParser parser = new JwtParser();
+    Optional<Jwt> jwt = parser.fromJwt(emptyRolesJwt);
+    assertEquals(Optional.of(Collections.emptySet()), jwt.flatMap(j -> Optional.of(j.getRoles())));
   }
 }

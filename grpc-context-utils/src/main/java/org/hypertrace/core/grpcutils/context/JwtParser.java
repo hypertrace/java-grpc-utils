@@ -4,6 +4,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -78,7 +80,7 @@ class JwtParser {
 
     @Override
     public Set<String> getRoles() {
-      return null;
+      return new HashSet<>(jwt.getClaim(ROLES_CLAIM).asList(String.class));
     }
   }
 }
