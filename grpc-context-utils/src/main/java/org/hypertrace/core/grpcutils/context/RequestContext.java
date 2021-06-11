@@ -1,9 +1,12 @@
 package org.hypertrace.core.grpcutils.context;
 
 import io.grpc.Context;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 
@@ -42,6 +45,10 @@ public class RequestContext {
 
   public Optional<String> getEmail() {
     return getJwt().flatMap(Jwt::getEmail);
+  }
+
+  public Set<String> getRoles() {
+    return getJwt().map(Jwt::getRoles).orElse(Collections.emptySet());
   }
 
   private Optional<Jwt> getJwt() {

@@ -65,21 +65,21 @@ class JwtParserTest {
   void testTraceableRolesCanBeParsedFromToken() {
     JwtParser parser = new JwtParser();
     Optional<Jwt> jwt = parser.fromJwt(testJwt);
-    assertEquals(Optional.of(testRoles), jwt.flatMap(j -> Optional.of(j.getRoles())));
+    assertEquals(Optional.of(testRoles), jwt.map(Jwt::getRoles));
   }
 
   @Test
   void testRolesAreEmptyIfRolesArrayIsEmptyInJwt() {
     JwtParser parser = new JwtParser();
     Optional<Jwt> jwt = parser.fromJwt(emptyRolesJwt);
-    assertEquals(Optional.of(Collections.emptySet()), jwt.flatMap(j -> Optional.of(j.getRoles())));
+    assertEquals(Optional.of(Collections.emptySet()), jwt.map(Jwt::getRoles));
   }
 
   @Test
   void testRolesAreEmptyIfRolesIfNoRolesClaimInToken() {
     JwtParser parser = new JwtParser();
     Optional<Jwt> jwt = parser.fromJwt(noRolesJwt);
-    assertEquals(Optional.of(Collections.emptySet()), jwt.flatMap(j -> Optional.of(j.getRoles())));
+    assertEquals(Optional.of(Collections.emptySet()), jwt.map(Jwt::getRoles));
   }
 
 }
