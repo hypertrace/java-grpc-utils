@@ -1,11 +1,10 @@
 package org.hypertrace.core.grpcutils.context;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
-import org.junit.jupiter.api.Assertions;
+import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,16 +55,16 @@ public class RequestContextTest {
 
   @Test
   void testRolesArePropagatedInRequestContext() {
-    Set<String> expectedRoles = ImmutableSet.of("billing_admin", "user", "traceable");
+    List<String> expectedRoles = ImmutableList.of("super_user", "user", "billing_admin");
     String jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MjEzNjM1OTcsIm" +
         "V4cCI6MTY1Mjg5OTU5NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6Ik" +
         "pvaG5ueSIsIlN1cm5hbWUiOiJSb2NrZXQiLCJuYW1lIjoiSm9obm55IFJvY2tldCIsImVtYWlsIjoianJvY2tldEBleGFtcGxlLmNvbSIsIn" +
-        "BpY3R1cmUiOiJ3d3cuZXhhbXBsZS5jb20iLCJodHRwczovL3RyYWNlYWJsZS5haS9yb2xlcyI6WyJ0cmFjZWFibGUiLCJ1c2VyIiwiYmlsbG" +
-        "luZ19hZG1pbiJdfQ.xdWar7cgJ_5V3SgECanVtBMhxJGb-DbeIfrKSpAQLJM";
+        "BpY3R1cmUiOiJ3d3cuZXhhbXBsZS5jb20iLCJodHRwczovL3RyYWNlYWJsZS5haS9yb2xlcyI6WyJzdXBlcl91c2VyIiwidXNlciIsImJpbG" +
+        "xpbmdfYWRtaW4iXX0.hcGrulbxkDDJhWuos18iQzpFjPBmlF6xt6wKusB2ZYg";
 
     RequestContext requestContext = new RequestContext();
     requestContext.add("authorization", "Bearer " + jwt);
-    Set<String> actualRoles = requestContext.getRoles();
+    List<String> actualRoles = requestContext.getRoles();
     assertEquals(expectedRoles, actualRoles);
   }
 }

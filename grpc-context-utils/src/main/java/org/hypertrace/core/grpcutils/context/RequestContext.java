@@ -4,9 +4,9 @@ import io.grpc.Context;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 
@@ -47,8 +47,8 @@ public class RequestContext {
     return getJwt().flatMap(Jwt::getEmail);
   }
 
-  public Set<String> getRoles() {
-    return getJwt().map(Jwt::getRoles).orElse(Collections.emptySet());
+  public List<String> getRoles() {
+    return getJwt().map(Jwt::getRoles).orElse(Collections.emptyList());
   }
 
   private Optional<Jwt> getJwt() {

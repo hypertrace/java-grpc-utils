@@ -82,12 +82,12 @@ class JwtParser {
     }
 
     @Override
-    public Set<String> getRoles() {
+    public List<String> getRoles() {
       List<String> roles = jwt.getClaim(ROLES_CLAIM).asList(String.class);
       if (roles == null || roles.isEmpty()) {
-        return Collections.emptySet();
+        return Collections.emptyList();
       }
-      return new HashSet<>(roles);
+      return roles;
     }
   }
 }
