@@ -4,6 +4,9 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +75,15 @@ class JwtParser {
     @Override
     public Optional<String> getEmail() {
       return Optional.ofNullable(jwt.getClaim(EMAIL_CLAIM).asString());
+    }
+
+    @Override
+    public List<String> getRoles(String rolesClaim) {
+      List<String> roles = jwt.getClaim(rolesClaim).asList(String.class);
+      if (roles == null || roles.isEmpty()) {
+        return Collections.emptyList();
+      }
+      return roles;
     }
   }
 }
