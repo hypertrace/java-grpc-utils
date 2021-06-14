@@ -1,16 +1,13 @@
 package org.hypertrace.core.grpcutils.context;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -55,7 +52,6 @@ class JwtParser {
     private static final String NAME_CLAIM = "name";
     private static final String PICTURE_CLAIM = "picture";
     private static final String EMAIL_CLAIM = "email";
-    private static final String ROLES_CLAIM = "https://traceable.ai/roles";
 
     private DefaultJwt(DecodedJWT jwt) {
       this.jwt = jwt;
@@ -82,8 +78,8 @@ class JwtParser {
     }
 
     @Override
-    public List<String> getRoles() {
-      List<String> roles = jwt.getClaim(ROLES_CLAIM).asList(String.class);
+    public List<String> getRoles(String rolesClaim) {
+      List<String> roles = jwt.getClaim(rolesClaim).asList(String.class);
       if (roles == null || roles.isEmpty()) {
         return Collections.emptyList();
       }

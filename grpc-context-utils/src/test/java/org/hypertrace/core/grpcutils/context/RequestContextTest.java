@@ -59,12 +59,12 @@ public class RequestContextTest {
     String jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MjEzNjM1OTcsIm" +
         "V4cCI6MTY1Mjg5OTU5NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6Ik" +
         "pvaG5ueSIsIlN1cm5hbWUiOiJSb2NrZXQiLCJuYW1lIjoiSm9obm55IFJvY2tldCIsImVtYWlsIjoianJvY2tldEBleGFtcGxlLmNvbSIsIn" +
-        "BpY3R1cmUiOiJ3d3cuZXhhbXBsZS5jb20iLCJodHRwczovL3RyYWNlYWJsZS5haS9yb2xlcyI6WyJzdXBlcl91c2VyIiwidXNlciIsImJpbG" +
-        "xpbmdfYWRtaW4iXX0.hcGrulbxkDDJhWuos18iQzpFjPBmlF6xt6wKusB2ZYg";
+        "BpY3R1cmUiOiJ3d3cuZXhhbXBsZS5jb20iLCJyb2xlcyI6WyJzdXBlcl91c2VyIiwidXNlciIsImJpbGxpbmdfYWRtaW4iXX0.lEDjPPCjr-" +
+        "Epv6pNslq-HK9vmxfstp1sY85GstlbU1I";
 
     RequestContext requestContext = new RequestContext();
     requestContext.add("authorization", "Bearer " + jwt);
-    List<String> actualRoles = requestContext.getRoles();
+    List<String> actualRoles = requestContext.getRoles("roles");
     assertEquals(expectedRoles, actualRoles);
   }
 }

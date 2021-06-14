@@ -47,8 +47,8 @@ public class RequestContext {
     return getJwt().flatMap(Jwt::getEmail);
   }
 
-  public List<String> getRoles() {
-    return getJwt().map(Jwt::getRoles).orElse(Collections.emptyList());
+  public List<String> getRoles(String rolesClaim) {
+    return getJwt().map(jwt -> jwt.getRoles(rolesClaim)).orElse(Collections.emptyList());
   }
 
   private Optional<Jwt> getJwt() {

@@ -12,5 +12,5 @@ interface Jwt {
 
   Optional<String> getEmail();
 
-  List<String> getRoles();
+  List<String> getRoles(String rolesClaim);
 }
