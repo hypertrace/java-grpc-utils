@@ -12,7 +12,9 @@ public class GrpcChannelRegistry {
   private final Map<String, ManagedChannel> channelMap = new ConcurrentHashMap<>();
   private volatile boolean isShutdown = false;
 
-  /** Use either {@link #forSecureAddress(String, int) or} */
+  /**
+   * Use either {@link #forSecureAddress(String, int)} or {@link #forPlaintextAddress(String, int)}
+   */
   @Deprecated
   public ManagedChannel forAddress(String host, int port) {
     return this.forPlaintextAddress(host, port);
