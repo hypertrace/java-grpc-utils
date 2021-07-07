@@ -23,21 +23,26 @@ class GrpcChannelRegistryTest {
 
   @Test
   void createsNewChannelsAsRequested() {
-    assertNotNull(this.channelRegistry.forAddress("foo", 1000));
+    assertNotNull(this.channelRegistry.forPlaintextAddress("foo", 1000));
   }
 
   @Test
   void reusesChannelsForDuplicateRequests() {
-    Channel firstChannel = this.channelRegistry.forAddress("foo", 1000);
-    assertSame(firstChannel, this.channelRegistry.forAddress("foo", 1000));
-    assertNotSame(firstChannel, this.channelRegistry.forAddress("foo", 1001));
-    assertNotSame(firstChannel, this.channelRegistry.forAddress("bar", 1000));
+    Channel firstChannel = this.channelRegistry.forPlaintextAddress("foo", 1000);
+    assertSame(firstChannel, this.channelRegistry.forPlaintextAddress("foo", 1000));
+    Channel firstChannelSecure = this.channelRegistry.forSecureAddress("foo", 1000);
+    assertSame(firstChannelSecure, this.channelRegistry.forSecureAddress("foo", 1000));
+    assertNotSame(firstChannel, firstChannelSecure);
+    assertNotSame(firstChannel, this.channelRegistry.forPlaintextAddress("foo", 1001));
+    assertNotSame(firstChannel, this.channelRegistry.forPlaintextAddress("foo", 1001));
+    assertNotSame(firstChannelSecure, this.channelRegistry.forSecureAddress("bar", 1000));
+    assertNotSame(firstChannelSecure, this.channelRegistry.forSecureAddress("bar", 1000));
   }
 
   @Test
   void shutdownAllChannelsOnShutdown() {
-    ManagedChannel firstChannel = this.channelRegistry.forAddress("foo", 1000);
-    ManagedChannel secondChannel = this.channelRegistry.forAddress("foo", 1002);
+    ManagedChannel firstChannel = this.channelRegistry.forPlaintextAddress("foo", 1000);
+    ManagedChannel secondChannel = this.channelRegistry.forSecureAddress("foo", 1002);
     assertFalse(firstChannel.isShutdown());
     assertFalse(secondChannel.isShutdown());
     this.channelRegistry.shutdown();
@@ -48,6 +53,7 @@ class GrpcChannelRegistryTest {
   @Test
   void throwsIfNewChannelRequestedAfterShutdown() {
     this.channelRegistry.shutdown();
-    assertThrows(AssertionError.class, () -> this.channelRegistry.forAddress("foo", 1000));
+    assertThrows(AssertionError.class, () -> this.channelRegistry.forPlaintextAddress("foo", 1000));
+    assertThrows(AssertionError.class, () -> this.channelRegistry.forSecureAddress("foo", 1000));
   }
 }
