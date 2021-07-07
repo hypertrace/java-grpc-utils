@@ -12,19 +12,41 @@ public class GrpcChannelRegistry {
   private final Map<String, ManagedChannel> channelMap = new ConcurrentHashMap<>();
   private volatile boolean isShutdown = false;
 
+  /**
+   * Use either {@link #forSecureAddress(String, int)} or {@link #forPlaintextAddress(String, int)}
+   */
+  @Deprecated
   public ManagedChannel forAddress(String host, int port) {
+    return this.forPlaintextAddress(host, port);
+  }
+
+  public ManagedChannel forSecureAddress(String host, int port) {
     assert !this.isShutdown;
-    String channelId = this.getChannelId(host, port);
-    return this.channelMap.computeIfAbsent(channelId, unused -> this.buildNewChannel(host, port));
+    String channelId = this.getChannelId(host, port, false);
+    return this.channelMap.computeIfAbsent(
+        channelId, unused -> this.buildNewChannel(host, port, false));
   }
 
-  private ManagedChannel buildNewChannel(String host, int port) {
-    LOG.info("Creating new channel for {}:{}", host, port);
-    return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+  public ManagedChannel forPlaintextAddress(String host, int port) {
+    assert !this.isShutdown;
+    String channelId = this.getChannelId(host, port, true);
+    return this.channelMap.computeIfAbsent(
+        channelId, unused -> this.buildNewChannel(host, port, true));
   }
 
-  private String getChannelId(String host, int port) {
-    return host + ":" + port;
+  private ManagedChannel buildNewChannel(String host, int port, boolean isPlaintext) {
+    LOG.info("Creating new channel {}", this.getChannelId(host, port, isPlaintext));
+
+    ManagedChannelBuilder<?> builder = ManagedChannelBuilder.forAddress(host, port);
+    if (isPlaintext) {
+      builder.usePlaintext();
+    }
+    return builder.build();
+  }
+
+  private String getChannelId(String host, int port, boolean isPlaintext) {
+    String securePrefix = isPlaintext ? "plaintext" : "secure";
+    return securePrefix + ":" + host + ":" + port;
   }
 
   public void shutdown() {
