@@ -4,6 +4,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,37 @@ public class GrpcChannelRegistry {
   }
 
   public void shutdown() {
-    channelMap.values().forEach(ManagedChannel::shutdown);
+    channelMap.forEach(this::fullyShutdownChannel);
     this.isShutdown = true;
+  }
+
+  private void fullyShutdownChannel(String channelId, ManagedChannel managedChannel) {
+    LOG.info("Starting shutdown for channel [{}]", channelId);
+    managedChannel.shutdown();
+    if (this.waitForTermination(channelId, managedChannel)) {
+      LOG.info("Shutdown channel successfully [{}]", channelId);
+      return;
+    }
+
+    LOG.error("Shutting down channel [{}] forcefully", channelId);
+    managedChannel.shutdownNow();
+    if (this.waitForTermination(channelId, managedChannel)) {
+      LOG.info("Forced channel [{}] shutdown successful", channelId);
+    } else {
+      LOG.info("Unable to force channel [{}] shutdown - giving up!", channelId);
+    }
+  }
+
+  private boolean waitForTermination(String channelId, ManagedChannel managedChannel) {
+    try {
+      if (!managedChannel.awaitTermination(1, TimeUnit.MINUTES)) {
+        LOG.error("Channel [{}] did not shut down after 1 minute", channelId);
+      }
+    } catch (InterruptedException ex) {
+      LOG.error(
+          "There has been an interruption during the shutdown process for channel [{}]", channelId);
+      Thread.currentThread().interrupt();
+    }
+    return managedChannel.isTerminated();
   }
 }
