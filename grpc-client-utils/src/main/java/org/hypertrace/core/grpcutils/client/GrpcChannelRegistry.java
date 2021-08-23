@@ -66,9 +66,9 @@ public class GrpcChannelRegistry {
     LOG.error("Shutting down channel [{}] forcefully", channelId);
     managedChannel.shutdownNow();
     if (this.waitForTermination(channelId, managedChannel)) {
-      LOG.info("Forced channel [{}] shutdown successful", channelId);
+      LOG.error("Forced channel [{}] shutdown successful", channelId);
     } else {
-      LOG.info("Unable to force channel [{}] shutdown - giving up!", channelId);
+      LOG.error("Unable to force channel [{}] shutdown - giving up!", channelId);
     }
   }
 
