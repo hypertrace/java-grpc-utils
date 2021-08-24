@@ -65,10 +65,37 @@ public class GrpcChannelRegistry {
     return securePrefix + ":" + host + ":" + port;
   }
 
+  /**
+   * Shuts down channels using a default deadline of 1 minute.
+   *
+   * @see #shutdown(Instant)
+   */
   public void shutdown() {
     this.shutdown(this.clock.instant().plus(1, MINUTES));
   }
 
+  /**
+   * Attempts to perform an orderly shutdown of all registered channels before the provided
+   * deadline, else falling back to a forceful shutdown. The call waits for all shutdowns to
+   * complete. More specifically, we go through three shutdown phases.
+   *
+   * <ol>
+   *   <li>First, we request an orderly shutdown across all registered channels. At this point, no
+   *       new calls will be accepted, but in-flight calls will be given a chance to complete before
+   *       shutting down.
+   *   <li>Next, we sequentially wait for each channel to complete. Although sequential, each
+   *       channel will wait no longer than the provided deadline.
+   *   <li>For any channels that have not shutdown successfully after the previous phase, we will
+   *       forcefully terminate it, cancelling any pending calls. Each channel is given up to 5
+   *       seconds for forceful termination, but should complete close to instantly.
+   * </ol>
+   *
+   * Upon completion, the registry is moved to a shutdown state and the channel references are
+   * cleared. Attempting to reference any channels from the registry at this point will result in an
+   * error.
+   *
+   * @param deadline Deadline for all channels to complete graceful shutdown.
+   */
   public void shutdown(Instant deadline) {
     channelMap.forEach(this::initiateChannelShutdown);
     channelMap.keySet().stream()
