@@ -13,7 +13,7 @@ dependencies {
   // End Logging
 
   // grpc
-  implementation("io.grpc:grpc-core:1.36.0")
+  implementation("io.grpc:grpc-core:1.40.0")
   constraints {
     implementation("com.google.guava:guava:30.0-jre") {
       because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLEGUAVA-1015415")
@@ -21,8 +21,9 @@ dependencies {
   }
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
-  testImplementation("org.mockito:mockito-core:3.4.4")
-  testRuntimeOnly("io.grpc:grpc-netty:1.36.0")
+  testImplementation("org.mockito:mockito-core:3.12.1")
+  testImplementation("org.mockito:mockito-inline:3.12.1")
+  testRuntimeOnly("io.grpc:grpc-netty:1.40.0")
 }
 
 tasks.test {
