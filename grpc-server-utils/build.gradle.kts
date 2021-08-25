@@ -24,5 +24,9 @@ dependencies {
     }
   }
 
+  annotationProcessor("org.projectlombok:lombok:1.18.20")
+  compileOnly("org.projectlombok:lombok:1.18.20")
+
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
+  testImplementation("org.mockito:mockito-core:3.12.1")
 }
