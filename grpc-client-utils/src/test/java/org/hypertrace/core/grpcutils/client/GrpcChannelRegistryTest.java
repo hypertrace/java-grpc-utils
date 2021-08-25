@@ -12,11 +12,10 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.grpc.Channel;
+import io.grpc.Deadline;
+import io.grpc.Deadline.Ticker;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,7 @@ class GrpcChannelRegistryTest {
 
   @BeforeEach
   void beforeEach() {
-    this.channelRegistry = new GrpcChannelRegistry(Clock.systemUTC());
+    this.channelRegistry = new GrpcChannelRegistry();
   }
 
   @Test
@@ -51,10 +50,10 @@ class GrpcChannelRegistryTest {
     assertNotSame(firstChannelSecure, this.channelRegistry.forSecureAddress("bar", 1000));
   }
 
+  @SuppressWarnings("rawtypes")
   @Test
   void shutdownAllChannelsOnShutdown() throws InterruptedException {
-    this.channelRegistry =
-        new GrpcChannelRegistry(Clock.fixed(Instant.ofEpochMilli(0), ZoneOffset.UTC));
+    this.channelRegistry = new GrpcChannelRegistry();
     try (MockedStatic<ManagedChannelBuilder> mockedBuilderStatic =
         Mockito.mockStatic(ManagedChannelBuilder.class)) {
 
@@ -78,8 +77,12 @@ class GrpcChannelRegistryTest {
       // Second does not
       when(secondChannel.isTerminated()).thenReturn(false);
 
+      Ticker mockTicker = mock(Ticker.class);
+
+      when(mockTicker.nanoTime()).thenReturn(0L);
+
       // Wait for 10ms (test clock fixed at 0)
-      this.channelRegistry.shutdown(Instant.ofEpochMilli(10));
+      this.channelRegistry.shutdown(Deadline.after(10, TimeUnit.MILLISECONDS, mockTicker));
 
       // First channel requests shutdown, waits, succeeds and checks result
       InOrder firstChannelVerifier = inOrder(firstChannel);
@@ -95,8 +98,8 @@ class GrpcChannelRegistryTest {
       secondChannelVerifier.verify(secondChannel).awaitTermination(10, TimeUnit.MILLISECONDS);
       secondChannelVerifier.verify(secondChannel).isTerminated();
       secondChannelVerifier.verify(secondChannel).shutdownNow();
-      // hardcoded 5s for force shutdown
-      secondChannelVerifier.verify(secondChannel).awaitTermination(5000, TimeUnit.MILLISECONDS);
+      // hardcoded additional 5s for force shutdown
+      secondChannelVerifier.verify(secondChannel).awaitTermination(5010, TimeUnit.MILLISECONDS);
       secondChannelVerifier.verify(secondChannel).isTerminated();
     }
   }
