@@ -1,12 +1,10 @@
 package org.hypertrace.core.grpcutils.client;
 
-import static java.time.temporal.ChronoUnit.MINUTES;
-import static java.time.temporal.ChronoUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import io.grpc.Deadline;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.time.Clock;
-import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -16,17 +14,7 @@ import org.slf4j.LoggerFactory;
 public class GrpcChannelRegistry {
   private static final Logger LOG = LoggerFactory.getLogger(GrpcChannelRegistry.class);
   private final Map<String, ManagedChannel> channelMap = new ConcurrentHashMap<>();
-  private final Clock clock;
   private volatile boolean isShutdown = false;
-
-  @Deprecated
-  public GrpcChannelRegistry() {
-    this(Clock.systemUTC());
-  }
-
-  public GrpcChannelRegistry(Clock clock) {
-    this.clock = clock;
-  }
 
   /**
    * Use either {@link #forSecureAddress(String, int)} or {@link #forPlaintextAddress(String, int)}
@@ -68,10 +56,10 @@ public class GrpcChannelRegistry {
   /**
    * Shuts down channels using a default deadline of 1 minute.
    *
-   * @see #shutdown(Instant)
+   * @see #shutdown(Deadline)
    */
   public void shutdown() {
-    this.shutdown(this.clock.instant().plus(1, MINUTES));
+    this.shutdown(Deadline.after(1, TimeUnit.MINUTES));
   }
 
   /**
@@ -96,11 +84,11 @@ public class GrpcChannelRegistry {
    *
    * @param deadline Deadline for all channels to complete graceful shutdown.
    */
-  public void shutdown(Instant deadline) {
+  public void shutdown(Deadline deadline) {
     channelMap.forEach(this::initiateChannelShutdown);
     channelMap.keySet().stream()
         .filter(channelId -> !this.waitForGracefulShutdown(channelId, deadline))
-        .forEach(this::forceShutdown);
+        .forEach(channelId -> this.forceShutdown(channelId, deadline.offset(5, TimeUnit.SECONDS)));
 
     this.isShutdown = true;
     this.channelMap.clear();
@@ -111,7 +99,7 @@ public class GrpcChannelRegistry {
     managedChannel.shutdown();
   }
 
-  private boolean waitForGracefulShutdown(String channelId, Instant deadline) {
+  private boolean waitForGracefulShutdown(String channelId, Deadline deadline) {
     boolean successfullyShutdown = this.waitForTermination(channelId, deadline);
     if (successfullyShutdown) {
       LOG.info("Shutdown channel successfully [{}]", channelId);
@@ -119,22 +107,20 @@ public class GrpcChannelRegistry {
     return successfullyShutdown;
   }
 
-  private void forceShutdown(String channelId) {
+  private void forceShutdown(String channelId, Deadline deadline) {
     LOG.error("Shutting down channel [{}] forcefully", channelId);
     this.channelMap.get(channelId).shutdownNow();
-    Instant forceShutdownDeadline = this.clock.instant().plus(5, SECONDS);
-    if (this.waitForTermination(channelId, forceShutdownDeadline)) {
+    if (this.waitForTermination(channelId, deadline)) {
       LOG.error("Forced channel [{}] shutdown successful", channelId);
     } else {
       LOG.error("Unable to force channel [{}] shutdown in 5s - giving up!", channelId);
     }
   }
 
-  private boolean waitForTermination(String channelId, Instant deadline) {
+  private boolean waitForTermination(String channelId, Deadline deadline) {
     ManagedChannel managedChannel = this.channelMap.get(channelId);
-    long millisRemaining = Math.max(0, deadline.toEpochMilli() - this.clock.millis());
     try {
-      if (!managedChannel.awaitTermination(millisRemaining, TimeUnit.MILLISECONDS)) {
+      if (!managedChannel.awaitTermination(deadline.timeRemaining(MILLISECONDS), MILLISECONDS)) {
         LOG.error("Channel [{}] did not shut down after waiting", channelId);
       }
     } catch (InterruptedException ex) {
