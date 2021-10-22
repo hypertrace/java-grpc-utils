@@ -16,8 +16,8 @@ import org.hypertrace.core.grpcutils.context.RequestContextConstants;
 @Deprecated
 public class GrpcClientRequestContextUtil {
   /**
-   * e Utility method to execute the given {@link Callable} in the context of given tenant by
-   * setting the tenant id in the request headers.
+   * Utility method to execute the given {@link Callable} in the context of given tenant by setting
+   * the tenant id in the request headers.
    *
    * @throws RuntimeException if there was an issue in executing the request.
    */
