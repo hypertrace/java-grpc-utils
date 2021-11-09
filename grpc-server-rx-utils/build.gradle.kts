@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
   api("io.reactivex.rxjava3:rxjava:3.0.6")
-  api("io.grpc:grpc-stub:1.36.0")
+  api("io.grpc:grpc-stub:1.40.0")
 
   annotationProcessor("org.projectlombok:lombok:1.18.18")
   compileOnly("org.projectlombok:lombok:1.18.18")
@@ -20,8 +20,8 @@ dependencies {
     }
   }
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
-  testImplementation("org.mockito:mockito-core:3.5.11")
-  testImplementation("org.mockito:mockito-junit-jupiter:3.5.11")
+  testImplementation("org.mockito:mockito-core:3.12.1")
+  testImplementation("org.mockito:mockito-junit-jupiter:3.12.1")
 }
 
 tasks.test {

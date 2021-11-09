@@ -1,9 +1,13 @@
 package org.hypertrace.core.grpcutils.client;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import io.grpc.Deadline;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,8 +66,81 @@ public class GrpcChannelRegistry {
     return securePrefix + ":" + host + ":" + port;
   }
 
+  /**
+   * Shuts down channels using a default deadline of 1 minute.
+   *
+   * @see #shutdown(Deadline)
+   */
   public void shutdown() {
-    channelMap.values().forEach(ManagedChannel::shutdown);
+    this.shutdown(Deadline.after(1, TimeUnit.MINUTES));
+  }
+
+  /**
+   * Attempts to perform an orderly shutdown of all registered channels before the provided
+   * deadline, else falling back to a forceful shutdown. The call waits for all shutdowns to
+   * complete. More specifically, we go through three shutdown phases.
+   *
+   * <ol>
+   *   <li>First, we request an orderly shutdown across all registered channels. At this point, no
+   *       new calls will be accepted, but in-flight calls will be given a chance to complete before
+   *       shutting down.
+   *   <li>Next, we sequentially wait for each channel to complete. Although sequential, each
+   *       channel will wait no longer than the provided deadline.
+   *   <li>For any channels that have not shutdown successfully after the previous phase, we will
+   *       forcefully terminate it, cancelling any pending calls. Each channel is given up to 5
+   *       seconds for forceful termination, but should complete close to instantly.
+   * </ol>
+   *
+   * Upon completion, the registry is moved to a shutdown state and the channel references are
+   * cleared. Attempting to reference any channels from the registry at this point will result in an
+   * error.
+   *
+   * @param deadline Deadline for all channels to complete graceful shutdown.
+   */
+  public void shutdown(Deadline deadline) {
+    channelMap.forEach(this::initiateChannelShutdown);
+    channelMap.keySet().stream()
+        .filter(channelId -> !this.waitForGracefulShutdown(channelId, deadline))
+        .forEach(channelId -> this.forceShutdown(channelId, deadline.offset(5, TimeUnit.SECONDS)));
+
     this.isShutdown = true;
+    this.channelMap.clear();
+  }
+
+  private void initiateChannelShutdown(String channelId, ManagedChannel managedChannel) {
+    LOG.info("Starting shutdown for channel [{}]", channelId);
+    managedChannel.shutdown();
+  }
+
+  private boolean waitForGracefulShutdown(String channelId, Deadline deadline) {
+    boolean successfullyShutdown = this.waitForTermination(channelId, deadline);
+    if (successfullyShutdown) {
+      LOG.info("Shutdown channel successfully [{}]", channelId);
+    }
+    return successfullyShutdown;
+  }
+
+  private void forceShutdown(String channelId, Deadline deadline) {
+    LOG.error("Shutting down channel [{}] forcefully", channelId);
+    this.channelMap.get(channelId).shutdownNow();
+    if (this.waitForTermination(channelId, deadline)) {
+      LOG.error("Forced channel [{}] shutdown successful", channelId);
+    } else {
+      LOG.error("Unable to force channel [{}] shutdown in 5s - giving up!", channelId);
+    }
+  }
+
+  private boolean waitForTermination(String channelId, Deadline deadline) {
+    ManagedChannel managedChannel = this.channelMap.get(channelId);
+    try {
+      if (!managedChannel.awaitTermination(deadline.timeRemaining(MILLISECONDS), MILLISECONDS)) {
+        LOG.error("Channel [{}] did not shut down after waiting", channelId);
+      }
+    } catch (InterruptedException ex) {
+      LOG.error(
+          "There has been an interruption while waiting for channel [{}] to shutdown", channelId);
+      Thread.currentThread().interrupt();
+    }
+    return managedChannel.isTerminated();
   }
 }

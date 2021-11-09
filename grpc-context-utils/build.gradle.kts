@@ -11,7 +11,7 @@ tasks.test {
 
 dependencies {
   // grpc
-  implementation("io.grpc:grpc-core:1.36.0")
+  implementation("io.grpc:grpc-core:1.40.0")
 
   implementation("com.auth0:java-jwt:3.14.0")
   implementation("com.auth0:jwks-rsa:0.17.0")
@@ -22,5 +22,5 @@ dependencies {
   // End Logging
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
-  testImplementation("org.mockito:mockito-core:3.8.0")
+  testImplementation("org.mockito:mockito-core:3.12.1")
 }
