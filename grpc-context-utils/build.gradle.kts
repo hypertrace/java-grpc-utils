@@ -21,6 +21,12 @@ dependencies {
   implementation("org.slf4j:slf4j-api:1.7.30")
   // End Logging
 
+  constraints {
+    implementation("com.google.code.gson:gson@2.8.9") {
+      because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLECODEGSON-1730327")
+    }
+  }
+
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
   testImplementation("org.mockito:mockito-core:3.12.1")
 }

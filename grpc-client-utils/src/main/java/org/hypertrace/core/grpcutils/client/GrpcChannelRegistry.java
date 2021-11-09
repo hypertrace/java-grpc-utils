@@ -6,6 +6,7 @@ import io.grpc.Deadline;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ public class GrpcChannelRegistry {
 
   public ManagedChannel forSecureAddress(String host, int port, GrpcChannelConfig config) {
     assert !this.isShutdown;
-    String channelId = this.getChannelId(host, port, false);
+    String channelId = this.getChannelId(host, port, false, config);
     return this.channelMap.computeIfAbsent(
         channelId, unused -> this.buildNewChannel(host, port, false, config));
   }
@@ -41,14 +42,14 @@ public class GrpcChannelRegistry {
 
   public ManagedChannel forPlaintextAddress(String host, int port, GrpcChannelConfig config) {
     assert !this.isShutdown;
-    String channelId = this.getChannelId(host, port, true);
+    String channelId = this.getChannelId(host, port, true, config);
     return this.channelMap.computeIfAbsent(
         channelId, unused -> this.buildNewChannel(host, port, true, config));
   }
 
   private ManagedChannel buildNewChannel(
       String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
-    LOG.info("Creating new channel {}", this.getChannelId(host, port, isPlaintext));
+    LOG.info("Creating new channel {}", this.getChannelId(host, port, isPlaintext, config));
 
     ManagedChannelBuilder<?> builder = ManagedChannelBuilder.forAddress(host, port);
     if (isPlaintext) {
@@ -61,9 +62,10 @@ public class GrpcChannelRegistry {
     return builder.build();
   }
 
-  private String getChannelId(String host, int port, boolean isPlaintext) {
+  private String getChannelId(
+      String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
     String securePrefix = isPlaintext ? "plaintext" : "secure";
-    return securePrefix + ":" + host + ":" + port;
+    return securePrefix + ":" + host + ":" + port + ":" + Objects.hash(config);
   }
 
   /**
