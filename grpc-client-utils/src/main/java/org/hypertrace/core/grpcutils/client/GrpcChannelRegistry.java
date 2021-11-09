@@ -17,29 +17,42 @@ public class GrpcChannelRegistry {
    */
   @Deprecated
   public ManagedChannel forAddress(String host, int port) {
-    return this.forPlaintextAddress(host, port);
+    return this.forPlaintextAddress(host, port, new GrpcChannelConfig());
   }
 
   public ManagedChannel forSecureAddress(String host, int port) {
+    return forSecureAddress(host, port, new GrpcChannelConfig());
+  }
+
+  public ManagedChannel forSecureAddress(String host, int port, GrpcChannelConfig config) {
     assert !this.isShutdown;
     String channelId = this.getChannelId(host, port, false);
     return this.channelMap.computeIfAbsent(
-        channelId, unused -> this.buildNewChannel(host, port, false));
+        channelId, unused -> this.buildNewChannel(host, port, false, config));
   }
 
   public ManagedChannel forPlaintextAddress(String host, int port) {
+    return forPlaintextAddress(host, port, new GrpcChannelConfig());
+  }
+
+  public ManagedChannel forPlaintextAddress(String host, int port, GrpcChannelConfig config) {
     assert !this.isShutdown;
     String channelId = this.getChannelId(host, port, true);
     return this.channelMap.computeIfAbsent(
-        channelId, unused -> this.buildNewChannel(host, port, true));
+        channelId, unused -> this.buildNewChannel(host, port, true, config));
   }
 
-  private ManagedChannel buildNewChannel(String host, int port, boolean isPlaintext) {
+  private ManagedChannel buildNewChannel(
+      String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
     LOG.info("Creating new channel {}", this.getChannelId(host, port, isPlaintext));
 
     ManagedChannelBuilder<?> builder = ManagedChannelBuilder.forAddress(host, port);
     if (isPlaintext) {
       builder.usePlaintext();
+    }
+
+    if (config.getMaxInboundMessageSize() != null) {
+      builder.maxInboundMessageSize(config.getMaxInboundMessageSize());
     }
     return builder.build();
   }

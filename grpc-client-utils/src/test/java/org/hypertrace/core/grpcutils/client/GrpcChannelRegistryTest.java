@@ -40,6 +40,17 @@ class GrpcChannelRegistryTest {
   }
 
   @Test
+  void setsMaxInboundMessageSizeConfig() {
+    Channel channel =
+        this.channelRegistry.forPlaintextAddress(
+            "foo", 1000, GrpcChannelConfig.builder().maxInboundMessageSize(100).build());
+    assertSame(
+        channel,
+        this.channelRegistry.forPlaintextAddress(
+            "foo", 1000, GrpcChannelConfig.builder().maxInboundMessageSize(100).build()));
+  }
+
+  @Test
   void shutdownAllChannelsOnShutdown() {
     ManagedChannel firstChannel = this.channelRegistry.forPlaintextAddress("foo", 1000);
     ManagedChannel secondChannel = this.channelRegistry.forSecureAddress("foo", 1002);
