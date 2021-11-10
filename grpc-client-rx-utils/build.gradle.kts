@@ -11,6 +11,12 @@ dependencies {
   api(project(":grpc-context-utils"))
   implementation("io.grpc:grpc-context:1.40.0")
 
+  constraints {
+    implementation("com.google.code.gson:gson@2.8.9") {
+      because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLECODEGSON-1730327")
+    }
+  }
+  
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
   testImplementation("org.mockito:mockito-core:3.12.1")
   testImplementation("org.mockito:mockito-junit-jupiter:3.12.1")
