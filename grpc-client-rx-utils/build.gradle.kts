@@ -7,9 +7,9 @@ plugins {
 
 dependencies {
   api("io.reactivex.rxjava3:rxjava:3.0.6")
-  api("io.grpc:grpc-stub:1.40.0")
+  api("io.grpc:grpc-stub:1.42.0")
   api(project(":grpc-context-utils"))
-  implementation("io.grpc:grpc-context:1.40.0")
+  implementation("io.grpc:grpc-context:1.42.0")
 
   constraints {
     implementation("com.google.code.gson:gson@2.8.9") {

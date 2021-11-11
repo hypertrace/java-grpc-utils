@@ -11,7 +11,7 @@ tasks.test {
 
 dependencies {
   // grpc
-  implementation("io.grpc:grpc-core:1.40.0")
+  implementation("io.grpc:grpc-core:1.42.0")
 
   implementation("com.auth0:java-jwt:3.14.0")
   implementation("com.auth0:jwks-rsa:0.17.0")

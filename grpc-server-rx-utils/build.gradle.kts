@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
   api("io.reactivex.rxjava3:rxjava:3.0.6")
-  api("io.grpc:grpc-stub:1.40.0")
+  api("io.grpc:grpc-stub:1.42.0")
 
   annotationProcessor("org.projectlombok:lombok:1.18.18")
   compileOnly("org.projectlombok:lombok:1.18.18")
