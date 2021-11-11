@@ -22,11 +22,11 @@ public class GrpcChannelRegistry {
    */
   @Deprecated
   public ManagedChannel forAddress(String host, int port) {
-    return this.forPlaintextAddress(host, port, new GrpcChannelConfig());
+    return this.forPlaintextAddress(host, port, GrpcChannelConfig.builder().build());
   }
 
   public ManagedChannel forSecureAddress(String host, int port) {
-    return forSecureAddress(host, port, new GrpcChannelConfig());
+    return forSecureAddress(host, port, GrpcChannelConfig.builder().build());
   }
 
   public ManagedChannel forSecureAddress(String host, int port, GrpcChannelConfig config) {
@@ -37,7 +37,7 @@ public class GrpcChannelRegistry {
   }
 
   public ManagedChannel forPlaintextAddress(String host, int port) {
-    return forPlaintextAddress(host, port, new GrpcChannelConfig());
+    return forPlaintextAddress(host, port, GrpcChannelConfig.builder().build());
   }
 
   public ManagedChannel forPlaintextAddress(String host, int port, GrpcChannelConfig config) {
