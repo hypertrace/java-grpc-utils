@@ -18,7 +18,7 @@ dependencies {
     implementation("com.google.guava:guava:30.1-jre") {
       because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLEGUAVA-1015415")
     }
-    implementation("com.google.code.gson:gson@2.8.9") {
+    implementation("com.google.code.gson:gson:2.8.9") {
       because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLECODEGSON-1730327")
     }
 

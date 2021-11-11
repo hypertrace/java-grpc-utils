@@ -16,7 +16,7 @@ dependencies {
   compileOnly("org.projectlombok:lombok:1.18.18")
 
   constraints {
-    implementation("com.google.code.gson:gson@2.8.9") {
+    implementation("com.google.code.gson:gson:2.8.9") {
       because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLECODEGSON-1730327")
     }
   }

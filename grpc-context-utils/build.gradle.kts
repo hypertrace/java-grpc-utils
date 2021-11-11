@@ -22,7 +22,7 @@ dependencies {
   // End Logging
 
   constraints {
-    implementation("com.google.code.gson:gson@2.8.9") {
+    implementation("com.google.code.gson:gson:2.8.9") {
       because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLECODEGSON-1730327")
     }
   }
