@@ -50,6 +50,23 @@ class GrpcChannelRegistryTest {
     assertNotSame(firstChannelSecure, this.channelRegistry.forSecureAddress("bar", 1000));
   }
 
+  @Test
+  void setsMaxInboundMessageSizeConfig() {
+    Channel channel =
+        this.channelRegistry.forPlaintextAddress(
+            "foo", 1000, GrpcChannelConfig.builder().maxInboundMessageSize(100).build());
+    // same message size
+    assertSame(
+        channel,
+        this.channelRegistry.forPlaintextAddress(
+            "foo", 1000, GrpcChannelConfig.builder().maxInboundMessageSize(100).build()));
+    // different message size
+    assertNotSame(
+        channel,
+        this.channelRegistry.forPlaintextAddress(
+            "foo", 1000, GrpcChannelConfig.builder().maxInboundMessageSize(200).build()));
+  }
+
   @SuppressWarnings("rawtypes")
   @Test
   void shutdownAllChannelsOnShutdown() throws InterruptedException {

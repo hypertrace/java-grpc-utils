@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
   api("io.reactivex.rxjava3:rxjava:3.0.6")
-  api("io.grpc:grpc-stub:1.40.0")
+  api("io.grpc:grpc-stub:1.42.0")
 
   annotationProcessor("org.projectlombok:lombok:1.18.18")
   compileOnly("org.projectlombok:lombok:1.18.18")
@@ -18,6 +18,10 @@ dependencies {
     implementation("com.google.guava:guava:30.1-jre") {
       because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLEGUAVA-1015415")
     }
+    implementation("com.google.code.gson:gson:2.8.9") {
+      because("https://snyk.io/vuln/SNYK-JAVA-COMGOOGLECODEGSON-1730327")
+    }
+
   }
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
   testImplementation("org.mockito:mockito-core:3.12.1")

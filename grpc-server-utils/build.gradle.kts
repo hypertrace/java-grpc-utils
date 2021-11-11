@@ -10,8 +10,8 @@ tasks.test {
 }
 
 dependencies {
-  api("io.grpc:grpc-context:1.40.0")
-  api("io.grpc:grpc-api:1.40.0")
+  api("io.grpc:grpc-context:1.42.0")
+  api("io.grpc:grpc-api:1.42.0")
 
   implementation(project(":grpc-context-utils"))
   implementation("org.slf4j:slf4j-api:1.7.30")
