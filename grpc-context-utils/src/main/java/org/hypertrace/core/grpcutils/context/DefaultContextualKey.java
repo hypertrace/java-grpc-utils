@@ -1,8 +1,10 @@
 package org.hypertrace.core.grpcutils.context;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -11,12 +13,13 @@ import java.util.stream.Collectors;
 class DefaultContextualKey<T> implements ContextualKey<T> {
   private final RequestContext context;
   private final T data;
-  private final Map<String, String> meaningfulContextHeaders;
+  private final Map<String, String> cacheableContextHeaders;
 
-  DefaultContextualKey(RequestContext context, T data) {
+  DefaultContextualKey(RequestContext context, T data, Collection<String> cacheableHeaderNames) {
     this.context = context;
     this.data = data;
-    this.meaningfulContextHeaders = this.extractMeaningfulHeaders(context.getRequestHeaders());
+    this.cacheableContextHeaders =
+        this.extractCacheableHeaders(context.getRequestHeaders(), cacheableHeaderNames);
   }
 
   @Override
@@ -55,12 +58,12 @@ class DefaultContextualKey<T> implements ContextualKey<T> {
     if (o == null || getClass() != o.getClass()) return false;
     DefaultContextualKey<?> that = (DefaultContextualKey<?>) o;
     return Objects.equals(getData(), that.getData())
-        && meaningfulContextHeaders.equals(that.meaningfulContextHeaders);
+        && cacheableContextHeaders.equals(that.cacheableContextHeaders);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getData(), meaningfulContextHeaders);
+    return Objects.hash(getData(), cacheableContextHeaders);
   }
 
   @Override
@@ -68,17 +71,19 @@ class DefaultContextualKey<T> implements ContextualKey<T> {
     return "DefaultContextualKey{"
         + "data="
         + data
-        + ", meaningfulContextHeaders="
-        + meaningfulContextHeaders
+        + ", cacheableContextHeaders="
+        + cacheableContextHeaders
         + '}';
   }
 
-  private Map<String, String> extractMeaningfulHeaders(Map<String, String> allHeaders) {
+  private Map<String, String> extractCacheableHeaders(
+      Map<String, String> allHeaders, Collection<String> cacheableHeaderNames) {
+    Set<String> cacheableHeaderNameSet =
+        cacheableHeaderNames.stream()
+            .map(String::toLowerCase)
+            .collect(Collectors.toUnmodifiableSet());
     return allHeaders.entrySet().stream()
-        .filter(
-            entry ->
-                RequestContextConstants.CACHE_MEANINGFUL_HEADERS.contains(
-                    entry.getKey().toLowerCase()))
+        .filter(entry -> cacheableHeaderNameSet.contains(entry.getKey().toLowerCase()))
         .collect(Collectors.toUnmodifiableMap(Entry::getKey, Entry::getValue));
   }
 }

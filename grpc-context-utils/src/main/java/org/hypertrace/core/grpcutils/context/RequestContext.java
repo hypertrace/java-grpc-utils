@@ -1,7 +1,9 @@
 package org.hypertrace.core.grpcutils.context;
 
-import io.grpc.Context;
+import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CACHE_MEANINGFUL_HEADERS;
+import static org.hypertrace.core.grpcutils.context.RequestContextConstants.TENANT_ID_HEADER_KEY;
 
+import io.grpc.Context;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -87,11 +89,53 @@ public class RequestContext {
     Context.current().withValue(RequestContext.CURRENT, this).run(runnable);
   }
 
+  /**
+   * @deprecated - Use {@link #buildInternalContextualKey(Object)} ()} or {@link
+   *     #buildUserContextualKey(Object)} instead, as appropriate. This delegates to {@link
+   *     #buildUserContextualKey(Object)} to match its original implementation for compatibility.
+   */
+  @Deprecated
   public <T> ContextualKey<T> buildContextualKey(T data) {
-    return new DefaultContextualKey<>(this, data);
+    return this.buildUserContextualKey(data);
   }
 
+  /**
+   * @deprecated - Use {@link #buildInternalContextualKey()} or {@link #buildUserContextualKey()}
+   *     instead, as appropriate. This delegates to {@link #buildUserContextualKey()} to match its
+   *     original implementation for compatibility.
+   */
+  @Deprecated
   public ContextualKey<Void> buildContextualKey() {
-    return new DefaultContextualKey<>(this, null);
+    return this.buildUserContextualKey();
+  }
+
+  /** This returns a cache key based on this user request context. */
+  public ContextualKey<Void> buildUserContextualKey() {
+    return new DefaultContextualKey<>(this, null, CACHE_MEANINGFUL_HEADERS);
+  }
+
+  /**
+   * An extension of {@link #buildUserContextualKey()} that also includes {@code data} as part of
+   * the cache key.
+   */
+  public <T> ContextualKey<T> buildUserContextualKey(T data) {
+    return new DefaultContextualKey<>(this, data, CACHE_MEANINGFUL_HEADERS);
+  }
+
+  /**
+   * This returns a cache key based on this internal request context. It should only be used if this
+   * request is not on behalf of a specific user - either one initiated by the platform or by the
+   * agent.
+   */
+  public ContextualKey<Void> buildInternalContextualKey() {
+    return new DefaultContextualKey<>(this, null, List.of(TENANT_ID_HEADER_KEY));
+  }
+
+  /**
+   * An extension of {@link @buildInternalContextualKey()} that also includes {@code data} as part
+   * of the cache key.
+   */
+  public <T> ContextualKey<T> buildInternalContextualKey(T data) {
+    return new DefaultContextualKey<>(this, data, List.of(TENANT_ID_HEADER_KEY));
   }
 }
