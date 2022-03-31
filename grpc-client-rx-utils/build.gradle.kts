@@ -6,15 +6,15 @@ plugins {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.43.1"))
-  api("io.reactivex.rxjava3:rxjava:3.1.3")
+  api(platform("io.grpc:grpc-bom:1.45.1"))
+  api("io.reactivex.rxjava3:rxjava:3.1.4")
   api("io.grpc:grpc-stub")
   api(project(":grpc-context-utils"))
   implementation("io.grpc:grpc-context")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-  testImplementation("org.mockito:mockito-core:4.2.0")
-  testImplementation("org.mockito:mockito-junit-jupiter:4.2.0")
+  testImplementation("org.mockito:mockito-core:4.4.0")
+  testImplementation("org.mockito:mockito-junit-jupiter:4.4.0")
 }
 
 tasks.test {
