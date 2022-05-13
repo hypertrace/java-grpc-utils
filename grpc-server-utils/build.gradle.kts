@@ -14,6 +14,12 @@ dependencies {
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
 
+  constraints {
+    api("io.netty:netty-codec-http2:4.1.77.Final") {
+      because("https://snyk.io/vuln/SNYK-JAVA-IONETTY-2812456")
+    }
+  }
+
   implementation(project(":grpc-context-utils"))
   implementation("org.slf4j:slf4j-api:1.7.36")
 
