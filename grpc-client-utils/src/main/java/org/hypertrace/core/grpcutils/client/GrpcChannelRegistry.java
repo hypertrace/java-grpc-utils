@@ -9,13 +9,24 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GrpcChannelRegistry {
   private static final Logger LOG = LoggerFactory.getLogger(GrpcChannelRegistry.class);
-  private final Map<String, ManagedChannel> channelMap = new ConcurrentHashMap<>();
+  private final Map<String, ManagedChannel> channelMap;
   private volatile boolean isShutdown = false;
+
+  public GrpcChannelRegistry(GrpcChannelRegistry sourceRegistry) {
+    // Copy constructor
+    this.isShutdown = sourceRegistry.isShutdown();
+    this.channelMap = new ConcurrentHashMap<>(sourceRegistry.channelMap);
+  }
+
+  public GrpcChannelRegistry() {
+    this.channelMap = new ConcurrentHashMap<>();
+  }
 
   /**
    * Use either {@link #forSecureAddress(String, int)} or {@link #forPlaintextAddress(String, int)}
@@ -30,10 +41,10 @@ public class GrpcChannelRegistry {
   }
 
   public ManagedChannel forSecureAddress(String host, int port, GrpcChannelConfig config) {
-    assert !this.isShutdown;
+    assert !this.isShutdown();
     String channelId = this.getChannelId(host, port, false, config);
-    return this.channelMap.computeIfAbsent(
-        channelId, unused -> this.buildNewChannel(host, port, false, config));
+    return this.getOrComputeChannel(
+        channelId, () -> this.buildNewChannel(host, port, false, config));
   }
 
   public ManagedChannel forPlaintextAddress(String host, int port) {
@@ -41,31 +52,43 @@ public class GrpcChannelRegistry {
   }
 
   public ManagedChannel forPlaintextAddress(String host, int port, GrpcChannelConfig config) {
-    assert !this.isShutdown;
+    assert !this.isShutdown();
     String channelId = this.getChannelId(host, port, true, config);
-    return this.channelMap.computeIfAbsent(
-        channelId, unused -> this.buildNewChannel(host, port, true, config));
+    return this.getOrComputeChannel(
+        channelId, () -> this.buildNewChannel(host, port, true, config));
   }
 
   private ManagedChannel buildNewChannel(
       String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
     LOG.info("Creating new channel {}", this.getChannelId(host, port, isPlaintext, config));
 
-    ManagedChannelBuilder<?> builder = ManagedChannelBuilder.forAddress(host, port);
+    ManagedChannelBuilder<?> builder = this.getBuilderForAddress(host, port);
     if (isPlaintext) {
       builder.usePlaintext();
     }
+    return this.configureAndBuildChannel(builder, config);
+  }
 
+  ManagedChannelBuilder<?> getBuilderForAddress(String host, int port) {
+    return ManagedChannelBuilder.forAddress(host, port);
+  }
+
+  ManagedChannel configureAndBuildChannel(
+      ManagedChannelBuilder<?> builder, GrpcChannelConfig config) {
     if (config.getMaxInboundMessageSize() != null) {
       builder.maxInboundMessageSize(config.getMaxInboundMessageSize());
     }
     return builder.build();
   }
 
-  private String getChannelId(
-      String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
+  String getChannelId(String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
     String securePrefix = isPlaintext ? "plaintext" : "secure";
     return securePrefix + ":" + host + ":" + port + ":" + Objects.hash(config);
+  }
+
+  final ManagedChannel getOrComputeChannel(
+      String channelId, Supplier<ManagedChannel> channelSupplier) {
+    return this.channelMap.computeIfAbsent(channelId, unused -> channelSupplier.get());
   }
 
   /**
@@ -107,6 +130,10 @@ public class GrpcChannelRegistry {
 
     this.isShutdown = true;
     this.channelMap.clear();
+  }
+
+  public boolean isShutdown() {
+    return this.isShutdown;
   }
 
   private void initiateChannelShutdown(String channelId, ManagedChannel managedChannel) {
