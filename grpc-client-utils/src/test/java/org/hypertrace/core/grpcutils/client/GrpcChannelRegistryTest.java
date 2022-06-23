@@ -16,6 +16,7 @@ import io.grpc.Deadline;
 import io.grpc.Deadline.Ticker;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -126,5 +127,14 @@ class GrpcChannelRegistryTest {
     this.channelRegistry.shutdown();
     assertThrows(AssertionError.class, () -> this.channelRegistry.forPlaintextAddress("foo", 1000));
     assertThrows(AssertionError.class, () -> this.channelRegistry.forSecureAddress("foo", 1000));
+  }
+
+  @Test
+  void copyConstructorReusesExistingChannels() {
+    GrpcChannelRegistry firstRegistry = new GrpcChannelRegistry();
+
+    Channel firstChannel = firstRegistry.forSecureAddress("foo", 1000);
+
+    assertSame(firstChannel, new GrpcChannelRegistry(firstRegistry).forSecureAddress("foo", 1000));
   }
 }
