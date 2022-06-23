@@ -11,15 +11,16 @@ dependencies {
       because("https://snyk.io/vuln/SNYK-JAVA-IONETTY-2812456")
     }
   }
-  api(platform("io.grpc:grpc-bom:1.45.1"))
+  api(platform("io.grpc:grpc-bom:1.47.0"))
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
 
   implementation(project(":grpc-context-utils"))
   implementation("org.slf4j:slf4j-api:1.7.36")
+  implementation("io.grpc:grpc-core")
 
-  annotationProcessor("org.projectlombok:lombok:1.18.22")
-  compileOnly("org.projectlombok:lombok:1.18.22")
+  annotationProcessor("org.projectlombok:lombok:1.18.24")
+  compileOnly("org.projectlombok:lombok:1.18.24")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
   testImplementation("org.mockito:mockito-core:4.4.0")
