@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Answers.RETURNS_SELF;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.inOrder;
@@ -16,7 +17,7 @@ import io.grpc.Deadline;
 import io.grpc.Deadline.Ticker;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,6 +81,7 @@ class GrpcChannelRegistryTest {
           .thenAnswer(
               invocation -> {
                 ManagedChannelBuilder<?> mockBuilder = mock(ManagedChannelBuilder.class);
+                when(mockBuilder.intercept(List.of())).then(RETURNS_SELF);
                 when(mockBuilder.build()).thenReturn(mock(ManagedChannel.class));
                 return mockBuilder;
               });

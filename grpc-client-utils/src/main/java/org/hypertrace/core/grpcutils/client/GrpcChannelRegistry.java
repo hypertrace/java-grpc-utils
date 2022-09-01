@@ -69,19 +69,19 @@ public class GrpcChannelRegistry {
     return this.configureAndBuildChannel(builder, config);
   }
 
-  ManagedChannelBuilder<?> getBuilderForAddress(String host, int port) {
+  protected ManagedChannelBuilder<?> getBuilderForAddress(String host, int port) {
     return ManagedChannelBuilder.forAddress(host, port);
   }
 
-  ManagedChannel configureAndBuildChannel(
+  protected ManagedChannel configureAndBuildChannel(
       ManagedChannelBuilder<?> builder, GrpcChannelConfig config) {
     if (config.getMaxInboundMessageSize() != null) {
       builder.maxInboundMessageSize(config.getMaxInboundMessageSize());
     }
-    return builder.build();
+    return builder.intercept(config.getClientInterceptors()).build();
   }
 
-  String getChannelId(String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
+  protected String getChannelId(String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
     String securePrefix = isPlaintext ? "plaintext" : "secure";
     return securePrefix + ":" + host + ":" + port + ":" + Objects.hash(config);
   }
