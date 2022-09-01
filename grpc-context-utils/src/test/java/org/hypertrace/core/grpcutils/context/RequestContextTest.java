@@ -1,5 +1,6 @@
 package org.hypertrace.core.grpcutils.context;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.common.collect.ImmutableList;
@@ -7,6 +8,8 @@ import io.grpc.Metadata;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -47,11 +50,18 @@ public class RequestContextTest {
   @Test
   void testCreateForTenantId() {
     RequestContext requestContext = RequestContext.forTenantId(TENANT_ID);
+    String requestId = requestContext.getRequestId().orElseThrow();
+    assertDoesNotThrow(() -> UUID.fromString(requestId));
     assertEquals(Optional.of(TENANT_ID), requestContext.getTenantId());
     assertEquals(
         Optional.of(TENANT_ID), requestContext.get(RequestContextConstants.TENANT_ID_HEADER_KEY));
     assertEquals(
-        Map.of(RequestContextConstants.TENANT_ID_HEADER_KEY, TENANT_ID), requestContext.getAll());
+        Optional.of(requestId), requestContext.get(RequestContextConstants.REQUEST_ID_HEADER_KEY));
+    assertEquals(
+        Set.of(
+            RequestContextConstants.TENANT_ID_HEADER_KEY,
+            RequestContextConstants.REQUEST_ID_HEADER_KEY),
+        requestContext.getAll().keySet());
   }
 
   @Test
