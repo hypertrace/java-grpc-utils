@@ -40,7 +40,8 @@ public class InProcessGrpcChannelRegistry extends GrpcChannelRegistry {
         this.getInProcessChannelId(name, config), () -> this.buildInProcessChannel(name, config));
   }
 
-  protected String getChannelId(String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
+  protected String getChannelId(
+      String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
     return this.getInProcessOverrideNameForHostAndPort(host, port)
         .map(name -> this.getInProcessChannelId(name, config))
         .orElseGet(() -> super.getChannelId(host, port, isPlaintext, config));

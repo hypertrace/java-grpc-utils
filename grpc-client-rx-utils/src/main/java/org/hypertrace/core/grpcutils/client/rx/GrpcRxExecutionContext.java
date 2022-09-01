@@ -18,14 +18,10 @@ public interface GrpcRxExecutionContext {
    */
   <TResp> Single<TResp> call(Callable<TResp> callable);
 
-  /**
-   * Creates the provided single in this execution context, returning the result.
-   */
+  /** Creates the provided single in this execution context, returning the result. */
   <TResp> Single<TResp> wrapSingle(Supplier<Single<TResp>> singleSupplier);
 
-  /**
-   * Creates the provided maybe in this execution context, returning the result.
-   */
+  /** Creates the provided maybe in this execution context, returning the result. */
   <TResp> Maybe<TResp> wrapMaybe(Supplier<Maybe<TResp>> maybeSupplier);
 
   /**

@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -84,6 +83,21 @@ class JwtParser {
         return Collections.emptyList();
       }
       return roles;
+    }
+
+    @Override
+    public String toString() {
+      final String emptyValue = "{}";
+      return "DefaultJwt{"
+          + "userId="
+          + getUserId().orElse(emptyValue)
+          + ", name="
+          + getName().orElse(emptyValue)
+          + ", pictureUrl="
+          + getPictureUrl().orElse(emptyValue)
+          + ", email="
+          + getEmail().orElse(emptyValue)
+          + '}';
     }
   }
 }

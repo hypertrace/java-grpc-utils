@@ -81,7 +81,8 @@ public class GrpcChannelRegistry {
     return builder.intercept(config.getClientInterceptors()).build();
   }
 
-  protected String getChannelId(String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
+  protected String getChannelId(
+      String host, int port, boolean isPlaintext, GrpcChannelConfig config) {
     String securePrefix = isPlaintext ? "plaintext" : "secure";
     return securePrefix + ":" + host + ":" + port + ":" + Objects.hash(config);
   }
