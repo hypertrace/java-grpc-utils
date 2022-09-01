@@ -11,6 +11,7 @@ import java.util.Set;
  */
 public class RequestContextConstants {
   public static final String TENANT_ID_HEADER_KEY = "x-tenant-id";
+  public static final String REQUEST_ID_HEADER_KEY = "request-id";
 
   public static final Metadata.Key<String> TENANT_ID_METADATA_KEY =
       Metadata.Key.of(TENANT_ID_HEADER_KEY, ASCII_STRING_MARSHALLER);
@@ -25,7 +26,8 @@ public class RequestContextConstants {
           "grpc-trace-bin",
           "traceparent",
           "tracestate",
-          AUTHORIZATION_HEADER);
+          AUTHORIZATION_HEADER,
+          REQUEST_ID_HEADER_KEY);
 
   /**
    * These headers may affect returned results and should be accounted for in any cached remote
