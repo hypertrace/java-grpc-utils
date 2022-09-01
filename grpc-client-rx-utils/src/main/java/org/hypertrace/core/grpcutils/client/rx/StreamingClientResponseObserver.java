@@ -6,10 +6,12 @@ import io.reactivex.rxjava3.core.ObservableEmitter;
 
 /**
  * Adapter class for bridging from a GRPC stream to an Rx Observable.
+ *
  * @param <ReqT>
  * @param <RespT>
  */
-public class StreamingClientResponseObserver<ReqT, RespT> implements ClientResponseObserver<ReqT, RespT> {
+public class StreamingClientResponseObserver<ReqT, RespT>
+    implements ClientResponseObserver<ReqT, RespT> {
 
   private final ObservableEmitter<RespT> emitter;
   private ClientCallStreamObserver<ReqT> requestStream;
@@ -18,7 +20,7 @@ public class StreamingClientResponseObserver<ReqT, RespT> implements ClientRespo
     this.emitter = emitter;
     this.emitter.setCancellable(
         () ->
-             this.requestStream.cancel(
+            this.requestStream.cancel(
                 "StreamingClientResponseObserver cancelling after emitter disposed", null));
   }
 

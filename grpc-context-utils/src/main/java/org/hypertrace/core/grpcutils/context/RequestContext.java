@@ -138,4 +138,15 @@ public class RequestContext {
   public <T> ContextualKey<T> buildInternalContextualKey(T data) {
     return new DefaultContextualKey<>(this, data, List.of(TENANT_ID_HEADER_KEY));
   }
+
+  @Override
+  public String toString() {
+    final String emptyValue = "{}";
+    return "RequestContext{"
+        + "headers="
+        + headers
+        + ", jwt="
+        + getJwt().map(Jwt::toString).orElse(emptyValue)
+        + '}';
+  }
 }

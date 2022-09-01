@@ -4,7 +4,8 @@ import io.grpc.CallCredentials;
 import org.hypertrace.core.grpcutils.context.RequestContext;
 
 public class RequestContextClientCallCredsProviderFactory {
-  private static class DefaultRequestContextClientCallCredsProvider implements ClientCallCredentialsProvider {
+  private static class DefaultRequestContextClientCallCredsProvider
+      implements ClientCallCredentialsProvider {
     private final ContextKeyBasedCreds credsProvider;
 
     public DefaultRequestContextClientCallCredsProvider() {

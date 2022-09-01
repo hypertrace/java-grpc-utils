@@ -1,5 +1,8 @@
 package org.hypertrace.core.grpcutils.client;
 
+import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
+import static io.grpc.Metadata.BINARY_BYTE_MARSHALLER;
+
 import io.grpc.CallCredentials;
 import io.grpc.Metadata;
 import io.grpc.Status;
@@ -8,20 +11,16 @@ import org.hypertrace.core.grpcutils.context.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
-import static io.grpc.Metadata.BINARY_BYTE_MARSHALLER;
-
 public abstract class RequestContextAsCreds extends CallCredentials {
   private static Logger LOGGER = LoggerFactory.getLogger(RequestContextAsCreds.class);
 
   @Override
-  public void thisUsesUnstableApi() {
-  }
+  public void thisUsesUnstableApi() {}
 
   /**
-   * Adds the request headers in the request context to a Metadata object to be propagated in the client call. All the
-   * headers are propagated so if any headers should be exempted from propagation, that should be handled separately
-   * before this call is made.
+   * Adds the request headers in the request context to a Metadata object to be propagated in the
+   * client call. All the headers are propagated so if any headers should be exempted from
+   * propagation, that should be handled separately before this call is made.
    *
    * @param applier
    * @param requestContext
@@ -34,9 +33,12 @@ public abstract class RequestContextAsCreds extends CallCredentials {
         if (entry.getValue() != null) {
           String key = entry.getKey();
           if (key.toLowerCase().endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
-            metadata.put(Metadata.Key.of(entry.getKey(), BINARY_BYTE_MARSHALLER), entry.getValue().getBytes());
+            metadata.put(
+                Metadata.Key.of(entry.getKey(), BINARY_BYTE_MARSHALLER),
+                entry.getValue().getBytes());
           } else {
-            metadata.put(Metadata.Key.of(entry.getKey(), ASCII_STRING_MARSHALLER), entry.getValue());
+            metadata.put(
+                Metadata.Key.of(entry.getKey(), ASCII_STRING_MARSHALLER), entry.getValue());
           }
         }
       }
