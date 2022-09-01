@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 
@@ -24,6 +25,7 @@ public class RequestContext {
   public static RequestContext forTenantId(String tenantId) {
     RequestContext requestContext = new RequestContext();
     requestContext.add(RequestContextConstants.TENANT_ID_HEADER_KEY, tenantId);
+    requestContext.add(RequestContextConstants.REQUEST_ID_HEADER_KEY, UUID.randomUUID().toString());
     return requestContext;
   }
 
