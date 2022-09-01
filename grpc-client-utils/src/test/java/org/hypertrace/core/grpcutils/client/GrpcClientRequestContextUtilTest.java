@@ -22,9 +22,10 @@ public class GrpcClientRequestContextUtilTest {
         Map.of("a1", "v1", RequestContextConstants.TENANT_ID_HEADER_KEY, TENANT_ID, "a2", "v2");
 
     Assertions.assertNull(RequestContext.CURRENT.get());
-    Assertions.assertEquals(Optional.of(TENANT_ID),
-        GrpcClientRequestContextUtil.executeWithHeadersContext(requestHeaders,
-            () -> RequestContext.CURRENT.get().getTenantId()));
+    Assertions.assertEquals(
+        Optional.of(TENANT_ID),
+        GrpcClientRequestContextUtil.executeWithHeadersContext(
+            requestHeaders, () -> RequestContext.CURRENT.get().getTenantId()));
   }
 
   @Test
@@ -34,11 +35,14 @@ public class GrpcClientRequestContextUtilTest {
     try {
       Map<String, String> requestHeaders = Map.of("a1", "v1", "a2", "v2");
 
-      GrpcClientRequestContextUtil.executeWithHeadersContext(requestHeaders, () -> {
-        RequestContext requestContext = RequestContext.CURRENT.get();
-        Assertions.assertEquals(Map.of("a1", "v1", "a2", "v2"), requestContext.getRequestHeaders());
-        return new Object();
-      });
+      GrpcClientRequestContextUtil.executeWithHeadersContext(
+          requestHeaders,
+          () -> {
+            RequestContext requestContext = RequestContext.CURRENT.get();
+            Assertions.assertEquals(
+                Map.of("a1", "v1", "a2", "v2"), requestContext.getRequestHeaders());
+            return new Object();
+          });
     } finally {
       ctx.detach(previous);
     }
@@ -51,11 +55,14 @@ public class GrpcClientRequestContextUtilTest {
     try {
       Map<String, String> requestHeaders = Map.of("authorization", "v1", "a2", "v2");
 
-      GrpcClientRequestContextUtil.executeWithHeadersContext(requestHeaders, () -> {
-        RequestContext requestContext = RequestContext.CURRENT.get();
-        Assertions.assertEquals(Map.of("authorization", "v1", "a2", "v2"), requestContext.getRequestHeaders());
-        return new Object();
-      });
+      GrpcClientRequestContextUtil.executeWithHeadersContext(
+          requestHeaders,
+          () -> {
+            RequestContext requestContext = RequestContext.CURRENT.get();
+            Assertions.assertEquals(
+                Map.of("authorization", "v1", "a2", "v2"), requestContext.getRequestHeaders());
+            return new Object();
+          });
     } finally {
       ctx.detach(previous);
     }
@@ -66,34 +73,50 @@ public class GrpcClientRequestContextUtilTest {
     Context ctx = Context.current();
     Context previous = ctx.attach();
     try {
-      Map<String, String> requestHeaders = Map.of("authorization", "v1", "a2", "v2",
-        "grpc-trace-bin", "AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE");
+      Map<String, String> requestHeaders =
+          Map.of(
+              "authorization",
+              "v1",
+              "a2",
+              "v2",
+              "grpc-trace-bin",
+              "AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE");
 
-      GrpcClientRequestContextUtil.executeWithHeadersContext(requestHeaders, () -> {
-        RequestContext requestContext = RequestContext.CURRENT.get();
-        Assertions.assertEquals(Map.of("authorization", "v1", "a2", "v2",
-          "grpc-trace-bin", "AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE"), requestContext.getRequestHeaders());
-        return new Object();
-      });
+      GrpcClientRequestContextUtil.executeWithHeadersContext(
+          requestHeaders,
+          () -> {
+            RequestContext requestContext = RequestContext.CURRENT.get();
+            Assertions.assertEquals(
+                Map.of(
+                    "authorization",
+                    "v1",
+                    "a2",
+                    "v2",
+                    "grpc-trace-bin",
+                    "AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE"),
+                requestContext.getRequestHeaders());
+            return new Object();
+          });
     } finally {
       ctx.detach(previous);
     }
   }
 
-
   @Test
   public void testExecuteInTenantIdContext() {
     Assertions.assertNull(RequestContext.CURRENT.get());
-    Assertions.assertEquals(Optional.of(TENANT_ID),
-        GrpcClientRequestContextUtil.executeInTenantContext(TENANT_ID,
-            () -> RequestContext.CURRENT.get().getTenantId()));
+    Assertions.assertEquals(
+        Optional.of(TENANT_ID),
+        GrpcClientRequestContextUtil.executeInTenantContext(
+            TENANT_ID, () -> RequestContext.CURRENT.get().getTenantId()));
   }
 
   @Test
   public void testExecuteInTenantIdContextForRunnable() {
     Assertions.assertNull(RequestContext.CURRENT.get());
     List<String> newList = new ArrayList<>();
-    GrpcClientRequestContextUtil.executeInTenantContext(TENANT_ID,
+    GrpcClientRequestContextUtil.executeInTenantContext(
+        TENANT_ID,
         () -> {
           newList.add(RequestContext.CURRENT.get().getTenantId().get());
         });
@@ -106,13 +129,13 @@ public class GrpcClientRequestContextUtilTest {
   public void testExecuteWithHeadersContext() {
     Set<String> newSet = new HashSet<>();
     Map<String, String> headers = Map.of("a1", "v1", "a2", "v2");
-    GrpcClientRequestContextUtil.executeWithHeadersContext(headers,
+    GrpcClientRequestContextUtil.executeWithHeadersContext(
+        headers,
         () -> {
           newSet.addAll(
               RequestContext.CURRENT.get().getRequestHeaders().entrySet().stream()
                   .map((entry) -> entry.getKey() + "=" + entry.getValue())
-                  .collect(Collectors.toUnmodifiableList())
-          );
+                  .collect(Collectors.toUnmodifiableList()));
         });
 
     Assertions.assertEquals(2, newSet.size());
@@ -123,22 +146,28 @@ public class GrpcClientRequestContextUtilTest {
   @Test
   public void testExecuteWithHeadersContextRethrowsRuntimeException() {
     Map<String, String> headers = Map.of("a1", "v1", "a2", "v2");
-    Assertions.assertThrows(IllegalArgumentException.class, () -> {
-      GrpcClientRequestContextUtil.executeWithHeadersContext(headers,
-          () -> {
-            throw new IllegalArgumentException("test exception");
-          });
-    });
+    Assertions.assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          GrpcClientRequestContextUtil.executeWithHeadersContext(
+              headers,
+              () -> {
+                throw new IllegalArgumentException("test exception");
+              });
+        });
   }
 
   @Test
   public void testExecuteWithHeadersContextWrapsCheckedException() {
     Map<String, String> headers = Map.of("a1", "v1", "a2", "v2");
-    Assertions.assertThrows(RuntimeException.class, () -> {
-      GrpcClientRequestContextUtil.executeWithHeadersContext(headers,
-          () -> {
-            throw new Exception("test exception");
-          });
-    });
+    Assertions.assertThrows(
+        RuntimeException.class,
+        () -> {
+          GrpcClientRequestContextUtil.executeWithHeadersContext(
+              headers,
+              () -> {
+                throw new Exception("test exception");
+              });
+        });
   }
 }

@@ -13,8 +13,8 @@ public class ContextKeyBasedCreds extends RequestContextAsCreds {
   }
 
   @Override
-  public void applyRequestMetadata(RequestInfo requestInfo, Executor appExecutor,
-                                   MetadataApplier applier) {
+  public void applyRequestMetadata(
+      RequestInfo requestInfo, Executor appExecutor, MetadataApplier applier) {
     try {
       applyRequestContext(applier, contextKey.get());
     } catch (RuntimeException e) {

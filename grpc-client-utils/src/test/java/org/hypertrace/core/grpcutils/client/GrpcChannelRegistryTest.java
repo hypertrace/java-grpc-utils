@@ -16,7 +16,6 @@ import io.grpc.Deadline;
 import io.grpc.Deadline.Ticker;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
