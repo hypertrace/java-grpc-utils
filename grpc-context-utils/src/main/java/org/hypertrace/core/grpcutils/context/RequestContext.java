@@ -4,11 +4,14 @@ import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CACH
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.TENANT_ID_HEADER_KEY;
 
 import io.grpc.Context;
+import io.grpc.Metadata;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 
@@ -22,6 +25,35 @@ public class RequestContext {
   public static RequestContext forTenantId(String tenantId) {
     RequestContext requestContext = new RequestContext();
     requestContext.add(RequestContextConstants.TENANT_ID_HEADER_KEY, tenantId);
+    requestContext.add(RequestContextConstants.REQUEST_ID_HEADER_KEY, UUID.randomUUID().toString());
+    return requestContext;
+  }
+
+  public static RequestContext fromMetadata(Metadata metadata) {
+    RequestContext requestContext = new RequestContext();
+
+    // Go over all the headers and copy the allowed headers to the RequestContext.
+    metadata.keys().stream()
+        .filter(
+            k ->
+                RequestContextConstants.HEADER_PREFIXES_TO_BE_PROPAGATED.stream()
+                    .anyMatch(prefix -> k.toLowerCase().startsWith(prefix.toLowerCase())))
+        .forEach(
+            k -> {
+              String value;
+              // check if key ends with binary suffix
+              if (k.toLowerCase().endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
+                byte[] bytes = metadata.get(Metadata.Key.of(k, Metadata.BINARY_BYTE_MARSHALLER));
+                value = new String(bytes, StandardCharsets.UTF_8);
+              } else {
+                value = metadata.get(Metadata.Key.of(k, Metadata.ASCII_STRING_MARSHALLER));
+              }
+              // The value could be null or empty for some keys so validate that.
+              if (value != null && !value.isEmpty()) {
+                requestContext.add(k, value);
+              }
+            });
+
     return requestContext;
   }
 
@@ -51,6 +83,10 @@ public class RequestContext {
 
   public List<String> getRoles(String rolesClaim) {
     return getJwt().map(jwt -> jwt.getRoles(rolesClaim)).orElse(Collections.emptyList());
+  }
+
+  public Optional<String> getRequestId() {
+    return this.get(RequestContextConstants.REQUEST_ID_HEADER_KEY);
   }
 
   private Optional<Jwt> getJwt() {
