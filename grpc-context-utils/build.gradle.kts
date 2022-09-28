@@ -20,4 +20,7 @@ dependencies {
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
   testImplementation("org.mockito:mockito-core:4.4.0")
+  testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.13.4")
+  testAnnotationProcessor("org.projectlombok:lombok:1.18.24")
+  testCompileOnly("org.projectlombok:lombok:1.18.24")
 }
