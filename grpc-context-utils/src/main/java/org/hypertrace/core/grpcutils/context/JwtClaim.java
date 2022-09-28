@@ -1,6 +1,5 @@
 package org.hypertrace.core.grpcutils.context;
 
-import com.auth0.jwt.exceptions.JWTDecodeException;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,7 +9,7 @@ public interface JwtClaim {
    *
    * @param <T> type
    * @param tClazz the type class
-   * @return An Optional containing the converted list if conversion succeeds
+   * @return An Optional containing the converted list of values if conversion succeeds
    */
   <T> Optional<List<T>> asList(Class<T> tClazz);
 
@@ -19,7 +18,7 @@ public interface JwtClaim {
    *
    * @param <T> type
    * @param tClazz the type class
-   * @return An Optional containing the converted list if conversion succeeds
+   * @return An Optional containing the converted value if conversion succeeds
    */
-  <T> Optional<T> as(Class<T> tClazz) throws JWTDecodeException;
+  <T> Optional<T> as(Class<T> tClazz);
 }
