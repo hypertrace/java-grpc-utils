@@ -3,6 +3,7 @@ package org.hypertrace.core.grpcutils.context;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CACHE_MEANINGFUL_HEADERS;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.TENANT_ID_HEADER_KEY;
 
+import com.google.common.collect.Maps;
 import io.grpc.Context;
 import io.grpc.Metadata;
 import java.nio.charset.StandardCharsets;
@@ -81,8 +82,15 @@ public class RequestContext {
     return getJwt().flatMap(Jwt::getEmail);
   }
 
+  @Deprecated
   public List<String> getRoles(String rolesClaim) {
-    return getJwt().map(jwt -> jwt.getRoles(rolesClaim)).orElse(Collections.emptyList());
+    return getClaim(rolesClaim)
+        .flatMap(claim -> claim.asList(String.class))
+        .orElse(Collections.emptyList());
+  }
+
+  public Optional<JwtClaim> getClaim(String claimName) {
+    return getJwt().flatMap(jwt -> jwt.getClaim(claimName));
   }
 
   public Optional<String> getRequestId() {
@@ -175,12 +183,17 @@ public class RequestContext {
     return new DefaultContextualKey<>(this, data, List.of(TENANT_ID_HEADER_KEY));
   }
 
+  private Map<String, String> getHeadersOtherThanAuth() {
+    return Maps.filterKeys(
+        headers, key -> !key.equals(RequestContextConstants.AUTHORIZATION_HEADER));
+  }
+
   @Override
   public String toString() {
     final String emptyValue = "{}";
     return "RequestContext{"
         + "headers="
-        + headers
+        + getHeadersOtherThanAuth()
         + ", jwt="
         + getJwt().map(Jwt::toString).orElse(emptyValue)
         + '}';

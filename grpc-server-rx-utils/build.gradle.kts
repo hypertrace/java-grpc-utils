@@ -10,8 +10,8 @@ dependencies {
   api("io.reactivex.rxjava3:rxjava:3.1.4")
   api("io.grpc:grpc-stub")
 
-  annotationProcessor("org.projectlombok:lombok:1.18.22")
-  compileOnly("org.projectlombok:lombok:1.18.22")
+  annotationProcessor("org.projectlombok:lombok:1.18.24")
+  compileOnly("org.projectlombok:lombok:1.18.24")
 
   implementation("org.slf4j:slf4j-api:1.7.36")
 

@@ -21,8 +21,8 @@ dependencies {
   implementation(project(":grpc-context-utils"))
   implementation("org.slf4j:slf4j-api:1.7.36")
 
-  annotationProcessor("org.projectlombok:lombok:1.18.22")
-  compileOnly("org.projectlombok:lombok:1.18.22")
+  annotationProcessor("org.projectlombok:lombok:1.18.24")
+  compileOnly("org.projectlombok:lombok:1.18.24")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
   testImplementation("org.mockito:mockito-core:4.4.0")

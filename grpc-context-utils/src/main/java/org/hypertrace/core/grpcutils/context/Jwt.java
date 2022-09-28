@@ -1,6 +1,5 @@
 package org.hypertrace.core.grpcutils.context;
 
-import java.util.List;
 import java.util.Optional;
 
 interface Jwt {
@@ -12,5 +11,5 @@ interface Jwt {
 
   Optional<String> getEmail();
 
-  List<String> getRoles(String rolesClaim);
+  Optional<JwtClaim> getClaim(String claimName);
 }

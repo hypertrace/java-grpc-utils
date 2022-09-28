@@ -1,14 +1,16 @@
 package org.hypertrace.core.grpcutils.context;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,46 +60,60 @@ class JwtParser {
 
     @Override
     public Optional<String> getUserId() {
-      return Optional.ofNullable(jwt.getClaim(SUBJECT_CLAIM).asString());
+      return this.getClaim(SUBJECT_CLAIM).flatMap(claim -> claim.as(String.class));
     }
 
     @Override
     public Optional<String> getName() {
-      return Optional.ofNullable(jwt.getClaim(NAME_CLAIM).asString());
+      return this.getClaim(NAME_CLAIM).flatMap(claim -> claim.as(String.class));
     }
 
     @Override
     public Optional<String> getPictureUrl() {
-      return Optional.ofNullable(jwt.getClaim(PICTURE_CLAIM).asString());
+      return this.getClaim(PICTURE_CLAIM).flatMap(claim -> claim.as(String.class));
     }
 
     @Override
     public Optional<String> getEmail() {
-      return Optional.ofNullable(jwt.getClaim(EMAIL_CLAIM).asString());
+      return this.getClaim(EMAIL_CLAIM).flatMap(claim -> claim.as(String.class));
     }
 
     @Override
-    public List<String> getRoles(String rolesClaim) {
-      List<String> roles = jwt.getClaim(rolesClaim).asList(String.class);
-      if (roles == null || roles.isEmpty()) {
-        return Collections.emptyList();
-      }
-      return roles;
+    public Optional<JwtClaim> getClaim(String claimName) {
+      return Optional.of(jwt.getClaim(claimName))
+          .filter(Predicate.not(Claim::isNull))
+          .map(DefaultJwtClaim::new);
     }
 
     @Override
     public String toString() {
-      final String emptyValue = "{}";
-      return "DefaultJwt{"
-          + "userId="
-          + getUserId().orElse(emptyValue)
-          + ", name="
-          + getName().orElse(emptyValue)
-          + ", pictureUrl="
-          + getPictureUrl().orElse(emptyValue)
-          + ", email="
-          + getEmail().orElse(emptyValue)
-          + '}';
+      return jwt.getClaims().toString();
+    }
+  }
+
+  private static class DefaultJwtClaim implements JwtClaim {
+    private final Claim claim;
+
+    private DefaultJwtClaim(Claim claim) {
+      this.claim = claim;
+    }
+
+    @Override
+    public <T> Optional<List<T>> asList(Class<T> tClazz) {
+      try {
+        return Optional.ofNullable(claim.asList(tClazz)).map(List::copyOf);
+      } catch (Exception e) {
+        return Optional.empty();
+      }
+    }
+
+    @Override
+    public <T> Optional<T> as(Class<T> tClazz) throws JWTDecodeException {
+      try {
+        return Optional.ofNullable(claim.as(tClazz));
+      } catch (Exception e) {
+        return Optional.empty();
+      }
     }
   }
 }
