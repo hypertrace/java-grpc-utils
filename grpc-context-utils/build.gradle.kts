@@ -12,6 +12,9 @@ tasks.test {
 dependencies {
   api(platform("io.grpc:grpc-bom:1.45.1"))
   implementation("io.grpc:grpc-core")
+  constraints {
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4")
+  }
 
   implementation("com.auth0:java-jwt:3.19.1")
   implementation("com.auth0:jwks-rsa:0.21.1")
