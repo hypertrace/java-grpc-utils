@@ -12,14 +12,17 @@ tasks.test {
 dependencies {
   api(platform("io.grpc:grpc-bom:1.45.1"))
   implementation("io.grpc:grpc-core")
-  constraints {
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4")
-  }
 
   implementation("com.auth0:java-jwt:3.19.1")
   implementation("com.auth0:jwks-rsa:0.21.1")
   implementation("com.google.guava:guava:31.1-jre")
   implementation("org.slf4j:slf4j-api:1.7.36")
+
+  constraints {
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4") {
+      because("https://nvd.nist.gov/vuln/detail/CVE-2022-42004")
+    }
+  }
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
   testImplementation("org.mockito:mockito-core:4.4.0")
