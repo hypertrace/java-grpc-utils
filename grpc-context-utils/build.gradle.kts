@@ -19,8 +19,12 @@ dependencies {
   implementation("org.slf4j:slf4j-api:1.7.36")
 
   constraints {
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4") {
-      because("https://nvd.nist.gov/vuln/detail/CVE-2022-42004")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.2") {
+      because("https://nvd.nist.gov/vuln/detail/CVE-2022-42003")
+    }
+    implementation("com.google.protobuf:protobuf-java:3.21.7") {
+      // Not used directly, but typically used together for since we always use proto and grpc together
+      because("CVE-2022-3171")
     }
   }
 

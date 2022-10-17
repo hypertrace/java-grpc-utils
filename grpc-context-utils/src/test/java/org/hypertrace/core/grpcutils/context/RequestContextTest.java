@@ -2,6 +2,7 @@ package org.hypertrace.core.grpcutils.context;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.google.common.collect.ImmutableList;
 import io.grpc.Metadata;
@@ -155,5 +156,19 @@ public class RequestContextTest {
         requestContext.get(RequestContextConstants.TENANT_ID_METADATA_KEY.name()).get());
     Assertions.assertEquals(
         "AAARf5ZpQwlN/8FVe1axOPlaAQIdRU/Y8j0LAgE", requestContext.get("grpc-trace-bin").get());
+  }
+
+  @Test
+  public void buildsTrailers() {
+    RequestContext requestContext = RequestContext.forTenantId("test");
+
+    // Try building trailers and then request context from them.
+    RequestContext requestContextFromBuiltTrailers =
+        RequestContext.fromMetadata(requestContext.buildTrailers());
+
+    // Should not be equal because tenant id is not a trailer so should be lost
+    assertNotEquals(requestContext, requestContextFromBuiltTrailers);
+    // Request IDs should however be equal
+    assertEquals(requestContext.getRequestId(), requestContextFromBuiltTrailers.getRequestId());
   }
 }
