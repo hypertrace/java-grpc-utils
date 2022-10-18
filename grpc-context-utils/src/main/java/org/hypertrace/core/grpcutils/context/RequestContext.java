@@ -1,11 +1,13 @@
 package org.hypertrace.core.grpcutils.context;
 
+import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CACHE_MEANINGFUL_HEADERS;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.TENANT_ID_HEADER_KEY;
 
 import com.google.common.collect.Maps;
 import io.grpc.Context;
 import io.grpc.Metadata;
+import io.grpc.Metadata.Key;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
@@ -181,6 +183,19 @@ public class RequestContext {
    */
   public <T> ContextualKey<T> buildInternalContextualKey(T data) {
     return new DefaultContextualKey<>(this, data, List.of(TENANT_ID_HEADER_KEY));
+  }
+
+  /** Converts the request context into metadata to be used as trailers */
+  public Metadata buildTrailers() {
+    Metadata trailers = new Metadata();
+    // For now, the only context item to use as a trailer is the request id
+    this.getRequestId()
+        .ifPresent(
+            requestId ->
+                trailers.put(
+                    Key.of(RequestContextConstants.REQUEST_ID_HEADER_KEY, ASCII_STRING_MARSHALLER),
+                    requestId));
+    return trailers;
   }
 
   private Map<String, String> getHeadersOtherThanAuth() {
