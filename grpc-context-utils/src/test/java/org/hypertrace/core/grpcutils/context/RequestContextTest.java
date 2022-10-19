@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.hypertrace.core.grpcutils.context.RequestContext.RequestContextHeader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -159,7 +160,7 @@ public class RequestContextTest {
   }
 
   @Test
-  public void buildsTrailers() {
+  void buildsTrailers() {
     RequestContext requestContext = RequestContext.forTenantId("test");
 
     // Try building trailers and then request context from them.
@@ -170,5 +171,73 @@ public class RequestContextTest {
     assertNotEquals(requestContext, requestContextFromBuiltTrailers);
     // Request IDs should however be equal
     assertEquals(requestContext.getRequestId(), requestContextFromBuiltTrailers.getRequestId());
+  }
+
+  @Test
+  void canGetHeaderNames() {
+    RequestContext requestContext =
+        new RequestContext().put("first", "f-v").put("first", "f-v2").put("second", "s-v");
+
+    assertEquals(Set.of("first", "second"), requestContext.getHeaderNames());
+  }
+
+  @Test
+  void returnsEmptyIfNoHeaderWithName() {
+    RequestContext requestContext = new RequestContext();
+
+    assertEquals(Set.of(), requestContext.getHeaderNames());
+    assertEquals(List.of(), requestContext.getAllHeaders());
+    assertEquals(Optional.empty(), requestContext.getHeaderValue("test"));
+    assertEquals(List.of(), requestContext.getAllHeaderValues("test"));
+  }
+
+  @Test
+  void acceptsMultipleHeaderValues() {
+    RequestContext requestContext = new RequestContext().put("first", "f-v").put("first", "f-v2");
+
+    assertEquals(Optional.of("f-v"), requestContext.getHeaderValue("first"));
+    assertEquals(List.of("f-v", "f-v2"), requestContext.getAllHeaderValues("first"));
+  }
+
+  @Test
+  void ignoresButPreservesHeaderNameCase() {
+    RequestContext requestContext = new RequestContext().put("first", "f-v").put("FIRST", "f-v2");
+
+    assertEquals(Set.of("first"), requestContext.getHeaderNames());
+    assertEquals(
+        List.of(
+            new RequestContextHeader("first", "f-v"), new RequestContextHeader("FIRST", "f-v2")),
+        requestContext.getAllHeaders());
+
+    assertEquals(Optional.of("f-v"), requestContext.getHeaderValue("FIRST"));
+    assertEquals(Optional.of("f-v"), requestContext.getHeaderValue("First"));
+    assertEquals(Optional.of("f-v"), requestContext.getHeaderValue("first"));
+    assertEquals(List.of("f-v", "f-v2"), requestContext.getAllHeaderValues("FIRST"));
+    assertEquals(List.of("f-v", "f-v2"), requestContext.getAllHeaderValues("First"));
+    assertEquals(List.of("f-v", "f-v2"), requestContext.getAllHeaderValues("first"));
+  }
+
+  @Test
+  void removesHeaders() {
+    RequestContext requestContext = new RequestContext().put("first", "f-v").put("FIRST", "f-v2");
+
+    assertEquals(List.of("f-v", "f-v2"), requestContext.removeHeader("First"));
+    assertEquals(Set.of(), requestContext.getHeaderNames());
+    assertEquals(List.of(), requestContext.getAllHeaders());
+    assertEquals(Optional.empty(), requestContext.getHeaderValue("first"));
+    assertEquals(List.of(), requestContext.getAllHeaderValues("FIRST"));
+  }
+
+  @Test
+  void backwardsCompatibilityForAdd() {
+    RequestContext requestContext = new RequestContext();
+    requestContext.add("first", "f-v");
+    requestContext.add("first", "f-v2");
+
+    assertEquals(Set.of("first"), requestContext.getHeaderNames());
+    assertEquals(
+        List.of(new RequestContextHeader("first", "f-v2")), requestContext.getAllHeaders());
+    assertEquals(Optional.of("f-v2"), requestContext.getHeaderValue("first"));
+    assertEquals(List.of("f-v2"), requestContext.getAllHeaderValues("first"));
   }
 }

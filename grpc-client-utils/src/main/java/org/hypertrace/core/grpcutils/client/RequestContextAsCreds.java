@@ -6,8 +6,8 @@ import static io.grpc.Metadata.BINARY_BYTE_MARSHALLER;
 import io.grpc.CallCredentials;
 import io.grpc.Metadata;
 import io.grpc.Status;
-import java.util.Map;
 import org.hypertrace.core.grpcutils.context.RequestContext;
+import org.hypertrace.core.grpcutils.context.RequestContext.RequestContextHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,17 +28,17 @@ public abstract class RequestContextAsCreds extends CallCredentials {
   protected void applyRequestContext(MetadataApplier applier, RequestContext requestContext) {
     Metadata metadata = new Metadata();
     if (requestContext != null) {
-      for (Map.Entry<String, String> entry : requestContext.getAll().entrySet()) {
+      for (RequestContextHeader header : requestContext.getAllHeaders()) {
         // Exclude null headers
-        if (entry.getValue() != null) {
-          String key = entry.getKey();
+        if (header.getValue() != null) {
+          String key = header.getName();
           if (key.toLowerCase().endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
             metadata.put(
-                Metadata.Key.of(entry.getKey(), BINARY_BYTE_MARSHALLER),
-                entry.getValue().getBytes());
+                Metadata.Key.of(header.getName(), BINARY_BYTE_MARSHALLER),
+                header.getValue().getBytes());
           } else {
             metadata.put(
-                Metadata.Key.of(entry.getKey(), ASCII_STRING_MARSHALLER), entry.getValue());
+                Metadata.Key.of(header.getName(), ASCII_STRING_MARSHALLER), header.getValue());
           }
         }
       }

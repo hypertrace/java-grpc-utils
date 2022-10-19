@@ -1,22 +1,28 @@
 package org.hypertrace.core.grpcutils.context;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
+import static java.util.Objects.requireNonNull;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CACHE_MEANINGFUL_HEADERS;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.TENANT_ID_HEADER_KEY;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Multimaps;
 import io.grpc.Context;
 import io.grpc.Metadata;
 import io.grpc.Metadata.Key;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import lombok.Value;
 
 /**
  * Context of the GRPC request that should be carried and can made available to the services so that
@@ -60,7 +66,8 @@ public class RequestContext {
     return requestContext;
   }
 
-  private final Map<String, String> headers = new HashMap<>();
+  private final ListMultimap<String, RequestContextHeader> headers =
+      MultimapBuilder.linkedHashKeys().linkedListValues().build();
   private final JwtParser jwtParser = new JwtParser();
 
   /** Reads tenant id from this RequestContext based on the tenant id http header and returns it. */
@@ -103,21 +110,102 @@ public class RequestContext {
     return get(RequestContextConstants.AUTHORIZATION_HEADER).flatMap(jwtParser::fromAuthHeader);
   }
 
-  /** Method to read all GRPC request headers from this RequestContext. */
+  /**
+   * This is retained for backwards compatibility, but is based on the incorrect assumption that a
+   * header only can have one value. For the updated API, please use {@link #getAllHeaders()}}
+   */
+  @Deprecated
   public Map<String, String> getRequestHeaders() {
     return getAll();
   }
 
-  public void add(String headerKey, String headerValue) {
-    this.headers.put(headerKey, headerValue);
+  /**
+   * This is retained for backwards compatibility. It previously was implemented with the assumption
+   * of a single value per header, so overwrote on addition. This is maintained by first removing
+   * any values for the given header name, then adding
+   *
+   * @param headerName
+   * @param headerValue
+   */
+  @Deprecated
+  public void add(String headerName, String headerValue) {
+    this.removeHeader(headerName);
+    this.put(headerName, headerValue);
   }
 
-  public Optional<String> get(String headerKey) {
-    return Optional.ofNullable(this.headers.get(headerKey));
+  /** Prefer {@link #getHeaderValue} */
+  @Deprecated
+  public Optional<String> get(String headerName) {
+    return this.getHeaderValue(headerName);
   }
 
+  /**
+   * This is retained for backwards compatibility, but is based on the incorrect assumption that a
+   * header only can have one value. For the updated API, please use {@link #getAllHeaders()} ()}
+   */
+  @Deprecated
   public Map<String, String> getAll() {
-    return Map.copyOf(headers);
+    return this.getHeaderNames().stream()
+        .flatMap(key -> this.headers.get(key).stream().findFirst().stream())
+        .collect(
+            Collectors.toUnmodifiableMap(
+                RequestContextHeader::getName, RequestContextHeader::getValue));
+  }
+
+  /**
+   * Adds the provided header name and header value. Duplicates are allowed. For fluency, the
+   * current instance is returned.
+   */
+  public RequestContext put(String headerName, String headerValue) {
+    this.headers.put(
+        this.normalizeHeaderName(requireNonNull(headerName)),
+        new RequestContextHeader(headerName, headerValue));
+    return this;
+  }
+
+  /** Returns all header names in normalized form (case not preserved) */
+  @Nonnull
+  public Set<String> getHeaderNames() {
+    return Set.copyOf(this.headers.keySet());
+  }
+
+  /**
+   * Removes and returns all headers matching the provided name. Header names are case insensitive.
+   * Returns an empty list if no headers have been removed.
+   */
+  @Nonnull
+  public List<String> removeHeader(String name) {
+    return this.headers.removeAll(this.normalizeHeaderName(name)).stream()
+        .map(RequestContextHeader::getValue)
+        .collect(Collectors.toUnmodifiableList());
+  }
+
+  /** Returns all header values matching the provided header name, case insensitively. */
+  @Nonnull
+  public List<String> getAllHeaderValues(String key) {
+    return this.headers.get(this.normalizeHeaderName(key)).stream()
+        .map(RequestContextHeader::getValue)
+        .collect(Collectors.toUnmodifiableList());
+  }
+
+  /**
+   * Returns all header name-value pairs, with the original case preserved. Multiple headers with
+   * the same name, and potentially same value may be returned.
+   */
+  @Nonnull
+  public List<RequestContextHeader> getAllHeaders() {
+    return List.copyOf(this.headers.values());
+  }
+
+  /**
+   * Gets the first header value specified for the provided name (case insensitive), or empty if no
+   * match.
+   */
+  @Nonnull
+  public Optional<String> getHeaderValue(String key) {
+    return this.headers.get(this.normalizeHeaderName(key)).stream()
+        .map(RequestContextHeader::getValue)
+        .findFirst();
   }
 
   public <V> V call(@Nonnull Callable<V> callable) {
@@ -198,8 +286,12 @@ public class RequestContext {
     return trailers;
   }
 
-  private Map<String, String> getHeadersOtherThanAuth() {
-    return Maps.filterKeys(
+  private String normalizeHeaderName(@Nonnull String headerName) {
+    return headerName.toLowerCase();
+  }
+
+  private Multimap<String, RequestContextHeader> getHeadersOtherThanAuth() {
+    return Multimaps.filterKeys(
         headers, key -> !key.equals(RequestContextConstants.AUTHORIZATION_HEADER));
   }
 
@@ -212,5 +304,11 @@ public class RequestContext {
         + ", jwt="
         + getJwt().map(Jwt::toString).orElse(emptyValue)
         + '}';
+  }
+
+  @Value
+  public static class RequestContextHeader {
+    String name;
+    String value;
   }
 }
