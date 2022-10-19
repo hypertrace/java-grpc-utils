@@ -32,10 +32,9 @@ public class RequestContext {
   public static final Context.Key<RequestContext> CURRENT = Context.key("request_context");
 
   public static RequestContext forTenantId(String tenantId) {
-    RequestContext requestContext = new RequestContext();
-    requestContext.add(RequestContextConstants.TENANT_ID_HEADER_KEY, tenantId);
-    requestContext.add(RequestContextConstants.REQUEST_ID_HEADER_KEY, UUID.randomUUID().toString());
-    return requestContext;
+    return new RequestContext()
+        .put(RequestContextConstants.TENANT_ID_HEADER_KEY, tenantId)
+        .put(RequestContextConstants.REQUEST_ID_HEADER_KEY, UUID.randomUUID().toString());
   }
 
   public static RequestContext fromMetadata(Metadata metadata) {
@@ -59,7 +58,7 @@ public class RequestContext {
               }
               // The value could be null or empty for some keys so validate that.
               if (value != null && !value.isEmpty()) {
-                requestContext.add(k, value);
+                requestContext.put(k, value);
               }
             });
 
@@ -72,7 +71,7 @@ public class RequestContext {
 
   /** Reads tenant id from this RequestContext based on the tenant id http header and returns it. */
   public Optional<String> getTenantId() {
-    return get(RequestContextConstants.TENANT_ID_HEADER_KEY);
+    return getHeaderValue(RequestContextConstants.TENANT_ID_HEADER_KEY);
   }
 
   public Optional<String> getUserId() {
@@ -103,11 +102,12 @@ public class RequestContext {
   }
 
   public Optional<String> getRequestId() {
-    return this.get(RequestContextConstants.REQUEST_ID_HEADER_KEY);
+    return this.getHeaderValue(RequestContextConstants.REQUEST_ID_HEADER_KEY);
   }
 
   private Optional<Jwt> getJwt() {
-    return get(RequestContextConstants.AUTHORIZATION_HEADER).flatMap(jwtParser::fromAuthHeader);
+    return this.getHeaderValue(RequestContextConstants.AUTHORIZATION_HEADER)
+        .flatMap(jwtParser::fromAuthHeader);
   }
 
   /**
