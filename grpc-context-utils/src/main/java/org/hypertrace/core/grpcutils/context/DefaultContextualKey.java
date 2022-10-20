@@ -1,25 +1,22 @@
 package org.hypertrace.core.grpcutils.context;
 
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Multimap;
 import java.util.Collection;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 class DefaultContextualKey<T> implements ContextualKey<T> {
   private final RequestContext context;
   private final T data;
-  private final Map<String, String> cacheableContextHeaders;
+  private final Multimap<String, String> cacheableContextHeaders;
 
   DefaultContextualKey(RequestContext context, T data, Collection<String> cacheableHeaderNames) {
     this.context = context;
     this.data = data;
-    this.cacheableContextHeaders =
-        this.extractCacheableHeaders(context.getRequestHeaders(), cacheableHeaderNames);
+    this.cacheableContextHeaders = this.extractCacheableHeaders(context, cacheableHeaderNames);
   }
 
   @Override
@@ -76,14 +73,12 @@ class DefaultContextualKey<T> implements ContextualKey<T> {
         + '}';
   }
 
-  private Map<String, String> extractCacheableHeaders(
-      Map<String, String> allHeaders, Collection<String> cacheableHeaderNames) {
-    Set<String> cacheableHeaderNameSet =
-        cacheableHeaderNames.stream()
-            .map(String::toLowerCase)
-            .collect(Collectors.toUnmodifiableSet());
-    return allHeaders.entrySet().stream()
-        .filter(entry -> cacheableHeaderNameSet.contains(entry.getKey().toLowerCase()))
-        .collect(Collectors.toUnmodifiableMap(Entry::getKey, Entry::getValue));
+  private Multimap<String, String> extractCacheableHeaders(
+      RequestContext requestContext, Collection<String> cacheableHeaderNames) {
+    return cacheableHeaderNames.stream()
+        .collect(
+            ImmutableListMultimap.flatteningToImmutableListMultimap(
+                Function.identity(),
+                headerName -> requestContext.getAllHeaderValues(headerName).stream()));
   }
 }
