@@ -78,7 +78,12 @@ public class GrpcChannelRegistry {
     if (config.getMaxInboundMessageSize() != null) {
       builder.maxInboundMessageSize(config.getMaxInboundMessageSize());
     }
+    addDefaultInterceptors(builder);
     return builder.intercept(config.getClientInterceptors()).build();
+  }
+
+  protected void addDefaultInterceptors(ManagedChannelBuilder<?> builder) {
+    // noop - provision for adding default interceptors if needed.
   }
 
   protected String getChannelId(
