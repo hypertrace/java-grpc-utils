@@ -3,11 +3,24 @@ package org.hypertrace.core.grpcutils.client;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Answers.RETURNS_SELF;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.grpc.Channel;
+import io.grpc.ClientInterceptor;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 class InProcessGrpcChannelRegistryTest {
   InProcessGrpcChannelRegistry channelRegistry;
@@ -73,5 +86,39 @@ class InProcessGrpcChannelRegistryTest {
     assertSame(
         firstChannel,
         new InProcessGrpcChannelRegistry(firstRegistry).forSecureAddress("foo", 1000));
+  }
+
+  @Test
+  void registersRegistryInterceptors() {
+    try (MockedStatic<InProcessChannelBuilder> mockedBuilderStatic =
+        Mockito.mockStatic(InProcessChannelBuilder.class)) {
+      InProcessChannelBuilder mockBuilder = mock(InProcessChannelBuilder.class);
+      ManagedChannel mockChannel = mock(ManagedChannel.class);
+
+      mockedBuilderStatic
+          .when(() -> InProcessChannelBuilder.forName("test"))
+          .thenAnswer(
+              invocation -> {
+                when(mockBuilder.intercept(anyList())).then(RETURNS_SELF);
+                when(mockBuilder.intercept(any(ClientInterceptor.class))).then(RETURNS_SELF);
+                when(mockBuilder.build()).thenReturn(mockChannel);
+                return mockBuilder;
+              });
+
+      ClientInterceptor mockInterceptor1 = mock(ClientInterceptor.class);
+      ClientInterceptor mockInterceptor2 = mock(ClientInterceptor.class);
+      this.channelRegistry =
+          new InProcessGrpcChannelRegistry(
+              Map.of("host:1000", "test"),
+              GrpcRegistryConfig.builder()
+                  .defaultInterceptor(mockInterceptor1)
+                  .defaultInterceptor(mockInterceptor2)
+                  .build());
+
+      assertSame(mockChannel, this.channelRegistry.forName("test"));
+      assertSame(mockChannel, this.channelRegistry.forPlaintextAddress("host", 1000));
+      verify(mockBuilder, times(1)).intercept(mockInterceptor1);
+      verify(mockBuilder, times(1)).intercept(mockInterceptor2);
+    }
   }
 }
