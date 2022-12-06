@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 import io.grpc.Channel;
 import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
