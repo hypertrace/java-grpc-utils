@@ -16,6 +16,16 @@ public class InProcessGrpcChannelRegistry extends GrpcChannelRegistry {
   }
 
   public InProcessGrpcChannelRegistry(Map<String, String> authorityToInProcessNamedOverride) {
+    this(authorityToInProcessNamedOverride, GrpcRegistryConfig.builder().build());
+  }
+
+  public InProcessGrpcChannelRegistry(GrpcRegistryConfig registryConfig) {
+    this(Collections.emptyMap(), registryConfig);
+  }
+
+  public InProcessGrpcChannelRegistry(
+      Map<String, String> authorityToInProcessNamedOverride, GrpcRegistryConfig registryConfig) {
+    super(registryConfig);
     this.authorityToInProcessNamedOverride = authorityToInProcessNamedOverride;
   }
 
