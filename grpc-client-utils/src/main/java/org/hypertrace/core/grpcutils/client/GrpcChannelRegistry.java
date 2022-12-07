@@ -8,6 +8,7 @@ import io.grpc.ManagedChannelBuilder;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
@@ -16,16 +17,27 @@ import org.slf4j.LoggerFactory;
 public class GrpcChannelRegistry {
   private static final Logger LOG = LoggerFactory.getLogger(GrpcChannelRegistry.class);
   private final Map<String, ManagedChannel> channelMap;
+  private final GrpcRegistryConfig registryConfig;
   private volatile boolean isShutdown = false;
 
   public GrpcChannelRegistry(GrpcChannelRegistry sourceRegistry) {
     // Copy constructor
+    this(sourceRegistry.registryConfig, new ConcurrentHashMap<>(sourceRegistry.channelMap));
     this.isShutdown = sourceRegistry.isShutdown();
-    this.channelMap = new ConcurrentHashMap<>(sourceRegistry.channelMap);
   }
 
   public GrpcChannelRegistry() {
-    this.channelMap = new ConcurrentHashMap<>();
+    this(GrpcRegistryConfig.builder().build());
+  }
+
+  public GrpcChannelRegistry(GrpcRegistryConfig registryConfig) {
+    this(registryConfig, new ConcurrentHashMap<>());
+  }
+
+  private GrpcChannelRegistry(
+      GrpcRegistryConfig registryConfig, ConcurrentMap<String, ManagedChannel> channelMap) {
+    this.registryConfig = registryConfig;
+    this.channelMap = channelMap;
   }
 
   /**
@@ -78,6 +90,7 @@ public class GrpcChannelRegistry {
     if (config.getMaxInboundMessageSize() != null) {
       builder.maxInboundMessageSize(config.getMaxInboundMessageSize());
     }
+    this.registryConfig.getDefaultInterceptors().forEach(builder::intercept);
     return builder.intercept(config.getClientInterceptors()).build();
   }
 
