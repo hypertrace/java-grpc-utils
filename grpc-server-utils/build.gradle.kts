@@ -14,8 +14,8 @@ dependencies {
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
 
-  api(platform("io.netty:netty-bom:4.1.79.Final")) {
-    because("https://snyk.io/vuln/SNYK-JAVA-IONETTY-2812456")
+  api(platform("io.netty:netty-bom:4.1.86.Final")) {
+    because("CVE-2022-41881")
   }
 
   implementation(project(":grpc-context-utils"))
