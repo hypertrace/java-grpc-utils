@@ -82,6 +82,7 @@ class JwtParser {
     public Optional<JwtClaim> getClaim(String claimName) {
       return Optional.of(jwt.getClaim(claimName))
           .filter(Predicate.not(Claim::isNull))
+          .filter(Predicate.not(Claim::isMissing))
           .map(DefaultJwtClaim::new);
     }
 
