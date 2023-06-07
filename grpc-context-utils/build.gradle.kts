@@ -13,8 +13,8 @@ dependencies {
   api(platform("io.grpc:grpc-bom:1.50.0"))
   implementation("io.grpc:grpc-core")
 
-  implementation("com.auth0:java-jwt:3.19.1")
-  implementation("com.auth0:jwks-rsa:0.21.1")
+  implementation("com.auth0:java-jwt:4.4.0")
+  implementation("com.auth0:jwks-rsa:0.22.0")
   implementation("com.google.guava:guava:31.1-jre")
   implementation("org.slf4j:slf4j-api:1.7.36")
 
