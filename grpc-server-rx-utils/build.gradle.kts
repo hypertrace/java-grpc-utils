@@ -6,7 +6,7 @@ plugins {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.50.0"))
+  api(platform("io.grpc:grpc-bom:1.56.0"))
   api("io.reactivex.rxjava3:rxjava:3.1.4")
   api("io.grpc:grpc-stub")
 
@@ -14,6 +14,9 @@ dependencies {
   compileOnly("org.projectlombok:lombok:1.18.24")
 
   implementation("org.slf4j:slf4j-api:1.7.36")
+  constraints {
+    implementation("com.google.guava:guava:32.0.1-jre")
+  }
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
   testImplementation("org.mockito:mockito-core:4.4.0")
