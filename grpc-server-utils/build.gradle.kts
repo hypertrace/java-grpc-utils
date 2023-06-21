@@ -14,7 +14,7 @@ dependencies {
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
 
-  api(platform("io.netty:netty-bom:4.1.86.Final")) {
+  api(platform("io.netty:netty-bom:4.1.94.Final")) {
     because("CVE-2022-41881")
   }
 
