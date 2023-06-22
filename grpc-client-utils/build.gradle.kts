@@ -10,8 +10,8 @@ dependencies {
   api(platform("io.grpc:grpc-bom:1.56.0"))
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
-  api(platform("io.netty:netty-bom:4.1.86.Final")) {
-    because("CVE-2022-41881")
+  api(platform("io.netty:netty-bom:4.1.94.Final")) {
+    because("CVE-2023-34462")
   }
 
   implementation(project(":grpc-context-utils"))
