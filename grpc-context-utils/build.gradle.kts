@@ -10,11 +10,11 @@ tasks.test {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.56.0"))
+  api(platform("io.grpc:grpc-bom:1.57.1"))
   implementation("io.grpc:grpc-core")
 
   implementation("com.auth0:java-jwt:4.4.0")
-  implementation("com.auth0:jwks-rsa:0.22.0")
+  implementation("com.auth0:jwks-rsa:0.22.1")
   implementation("com.google.guava:guava:32.0.1-jre")
   implementation("org.slf4j:slf4j-api:1.7.36")
 
