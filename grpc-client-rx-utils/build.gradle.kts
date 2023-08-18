@@ -6,7 +6,7 @@ plugins {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.56.0"))
+  api(platform("io.grpc:grpc-bom:1.57.2"))
   api("io.reactivex.rxjava3:rxjava:3.1.4")
   api("io.grpc:grpc-stub")
   api(project(":grpc-context-utils"))

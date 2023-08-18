@@ -7,4 +7,12 @@
         <packageUrl regex="true">^pkg:maven/org\.hypertrace\..*@.*$</packageUrl>
         <cpe>cpe:/a:grpc:grpc</cpe>
     </suppress>
+    <suppress until="2023-08-31Z">
+        <notes><![CDATA[
+  file name: jackson-databind-2.14.2.jar
+  This is currently disputed.
+  ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
+        <cve>CVE-2023-35116</cve>
+    </suppress>
 </suppressions> 
