@@ -17,7 +17,8 @@ dependencies {
   implementation("com.auth0:jwks-rsa:0.22.0")
   implementation("com.google.guava:guava:32.0.1-jre")
   implementation("org.slf4j:slf4j-api:1.7.36")
-
+  implementation("com.github.f4b6a3:uuid-creator:5.3.2")
+  
   annotationProcessor("org.projectlombok:lombok:1.18.24")
   compileOnly("org.projectlombok:lombok:1.18.24")
 

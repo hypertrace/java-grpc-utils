@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CACHE_MEANINGFUL_HEADERS;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.TENANT_ID_HEADER_KEY;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
@@ -34,7 +35,7 @@ public class RequestContext {
   public static RequestContext forTenantId(String tenantId) {
     return new RequestContext()
         .put(RequestContextConstants.TENANT_ID_HEADER_KEY, tenantId)
-        .put(RequestContextConstants.REQUEST_ID_HEADER_KEY, UUID.randomUUID().toString());
+        .put(RequestContextConstants.REQUEST_ID_HEADER_KEY, UuidCreator.getRandomBasedFast().toString());
   }
 
   public static RequestContext fromMetadata(Metadata metadata) {
