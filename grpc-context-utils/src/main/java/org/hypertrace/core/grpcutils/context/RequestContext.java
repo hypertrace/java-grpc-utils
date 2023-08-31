@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -35,7 +34,9 @@ public class RequestContext {
   public static RequestContext forTenantId(String tenantId) {
     return new RequestContext()
         .put(RequestContextConstants.TENANT_ID_HEADER_KEY, tenantId)
-        .put(RequestContextConstants.REQUEST_ID_HEADER_KEY, UuidCreator.getRandomBasedFast().toString());
+        .put(
+            RequestContextConstants.REQUEST_ID_HEADER_KEY,
+            UuidCreator.getRandomBasedFast().toString());
   }
 
   public static RequestContext fromMetadata(Metadata metadata) {
