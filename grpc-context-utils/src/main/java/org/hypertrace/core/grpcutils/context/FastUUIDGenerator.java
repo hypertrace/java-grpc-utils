@@ -3,13 +3,13 @@ package org.hypertrace.core.grpcutils.context;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class FastUUIDGenerator {
+class FastUUIDGenerator {
   /**
    * This function generates UUIDs using ThreadLocalRandom, which is faster and doesn't block like
    * the default randomUUID method that relies on /dev/random. It's suitable for most random UUID
    * needs.
    */
-  public static UUID randomUUID() {
+  static UUID randomUUID() {
     long mostSigBits = ThreadLocalRandom.current().nextLong();
     long leastSigBits = ThreadLocalRandom.current().nextLong();
 
