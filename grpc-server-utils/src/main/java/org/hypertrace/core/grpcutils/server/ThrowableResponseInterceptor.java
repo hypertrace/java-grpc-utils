@@ -6,8 +6,6 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 /** Server Interceptor that decorates the error response status before closing the call */
 public class ThrowableResponseInterceptor implements ServerInterceptor {
@@ -26,23 +24,15 @@ public class ThrowableResponseInterceptor implements ServerInterceptor {
             if (status.getCode() == Status.Code.UNKNOWN
                 && status.getDescription() == null
                 && status.getCause() != null) {
-              Throwable e = status.getCause();
               status =
                   Status.INTERNAL
-                      .withDescription(e.getMessage())
-                      .augmentDescription(stacktraceToString(e));
+                      .withDescription(status.getCause().getMessage())
+                      .withCause(status.getCause());
             }
             super.close(status, trailers);
           }
         };
 
     return next.startCall(wrappedCall, headers);
-  }
-
-  private String stacktraceToString(Throwable e) {
-    StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
-    e.printStackTrace(printWriter);
-    return stringWriter.toString();
   }
 }
