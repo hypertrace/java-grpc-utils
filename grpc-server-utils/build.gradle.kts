@@ -10,11 +10,11 @@ tasks.test {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.57.2"))
+  api(platform("io.grpc:grpc-bom:1.59.1"))
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
 
-  api(platform("io.netty:netty-bom:4.1.100.Final")) {
+  api(platform("io.netty:netty-bom:4.1.101.Final")) {
     because("CVE-2023-44487")
   }
 

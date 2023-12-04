@@ -10,7 +10,8 @@ tasks.test {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.57.2"))
+  api(platform("io.grpc:grpc-bom:1.59.1"))
+  api(platform("com.fasterxml.jackson:jackson-bom:2.16.0"))
   implementation("io.grpc:grpc-core")
 
   implementation("com.auth0:java-jwt:4.4.0")
@@ -20,13 +21,6 @@ dependencies {
 
   annotationProcessor("org.projectlombok:lombok:1.18.24")
   compileOnly("org.projectlombok:lombok:1.18.24")
-
-  constraints {
-    implementation("com.google.protobuf:protobuf-java:3.21.7") {
-      // Not used directly, but typically used together for since we always use proto and grpc together
-      because("CVE-2022-3171")
-    }
-  }
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
   testImplementation("org.mockito:mockito-core:4.4.0")
