@@ -10,7 +10,7 @@ tasks.test {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.59.1"))
+  api(platform("io.grpc:grpc-bom:1.60.0"))
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
 
