@@ -17,7 +17,7 @@ public class ContextualExceptionDetails {
   @Nonnull RequestContext requestContext;
   @Nullable String externalMessage;
 
-  Optional<String> getExternalMessage() {
+  public Optional<String> getExternalMessage() {
     return Optional.ofNullable(this.externalMessage);
   }
 

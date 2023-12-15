@@ -6,7 +6,13 @@ import io.grpc.StatusRuntimeException;
 import javax.annotation.Nonnull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
+@Getter
+@EqualsAndHashCode
+@ToString
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ContextualStatusExceptionBuilder {
 
