@@ -161,16 +161,18 @@ public class RequestContextTest {
 
   @Test
   void buildsTrailers() {
-    RequestContext requestContext = RequestContext.forTenantId("test");
+    RequestContext requestContext =
+        RequestContext.forTenantId("test").put("other-header", "other-value");
 
     // Try building trailers and then request context from them.
     RequestContext requestContextFromBuiltTrailers =
         RequestContext.fromMetadata(requestContext.buildTrailers());
 
-    // Should not be equal because tenant id is not a trailer so should be lost
+    // Should not be equal because other header is not a trailer so should be lost
     assertNotEquals(requestContext, requestContextFromBuiltTrailers);
-    // Request IDs should however be equal
+    // Request ID and tenant ID should however be equal
     assertEquals(requestContext.getRequestId(), requestContextFromBuiltTrailers.getRequestId());
+    assertEquals(requestContext.getTenantId(), requestContextFromBuiltTrailers.getTenantId());
   }
 
   @Test

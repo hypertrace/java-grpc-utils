@@ -279,13 +279,16 @@ public class RequestContext {
   /** Converts the request context into metadata to be used as trailers */
   public Metadata buildTrailers() {
     Metadata trailers = new Metadata();
-    // For now, the only context item to use as a trailer is the request id
+    // Propagate the tenant id and request id back
     this.getRequestId()
         .ifPresent(
             requestId ->
                 trailers.put(
                     Key.of(RequestContextConstants.REQUEST_ID_HEADER_KEY, ASCII_STRING_MARSHALLER),
                     requestId));
+    this.getTenantId()
+        .ifPresent(
+            tenantId -> trailers.put(RequestContextConstants.TENANT_ID_METADATA_KEY, tenantId));
     return trailers;
   }
 
