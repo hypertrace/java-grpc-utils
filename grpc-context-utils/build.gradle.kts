@@ -10,7 +10,7 @@ tasks.test {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.59.1"))
+  api(platform("io.grpc:grpc-bom:1.60.0"))
   api(platform("com.fasterxml.jackson:jackson-bom:2.16.0"))
   implementation("io.grpc:grpc-core")
 
