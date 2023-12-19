@@ -21,14 +21,17 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 /**
  * Context of the GRPC request that should be carried and can made available to the services so that
  * the service can use them. We use this to propagate headers across services.
  */
+@EqualsAndHashCode
 public class RequestContext {
   public static final Context.Key<RequestContext> CURRENT = Context.key("request_context");
+  private static final JwtParser JWT_PARSER = new JwtParser();
 
   public static RequestContext forTenantId(String tenantId) {
     return new RequestContext()
@@ -68,7 +71,6 @@ public class RequestContext {
 
   private final ListMultimap<String, RequestContextHeader> headers =
       MultimapBuilder.linkedHashKeys().linkedListValues().build();
-  private final JwtParser jwtParser = new JwtParser();
 
   /** Reads tenant id from this RequestContext based on the tenant id http header and returns it. */
   public Optional<String> getTenantId() {
@@ -108,7 +110,7 @@ public class RequestContext {
 
   private Optional<Jwt> getJwt() {
     return this.getHeaderValue(RequestContextConstants.AUTHORIZATION_HEADER)
-        .flatMap(jwtParser::fromAuthHeader);
+        .flatMap(JWT_PARSER::fromAuthHeader);
   }
 
   /**
@@ -277,13 +279,16 @@ public class RequestContext {
   /** Converts the request context into metadata to be used as trailers */
   public Metadata buildTrailers() {
     Metadata trailers = new Metadata();
-    // For now, the only context item to use as a trailer is the request id
+    // Propagate the tenant id and request id back
     this.getRequestId()
         .ifPresent(
             requestId ->
                 trailers.put(
                     Key.of(RequestContextConstants.REQUEST_ID_HEADER_KEY, ASCII_STRING_MARSHALLER),
                     requestId));
+    this.getTenantId()
+        .ifPresent(
+            tenantId -> trailers.put(RequestContextConstants.TENANT_ID_METADATA_KEY, tenantId));
     return trailers;
   }
 

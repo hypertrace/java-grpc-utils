@@ -6,6 +6,7 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
+import org.hypertrace.core.grpcutils.context.RequestContext;
 
 /** Server Interceptor that decorates the error response status before closing the call */
 public class ThrowableResponseInterceptor implements ServerInterceptor {
@@ -28,6 +29,9 @@ public class ThrowableResponseInterceptor implements ServerInterceptor {
                   Status.INTERNAL
                       .withDescription(status.getCause().getMessage())
                       .withCause(status.getCause());
+            }
+            if (!status.isOk() && trailers.keys().isEmpty()) {
+              super.close(status, RequestContext.fromMetadata(headers).buildTrailers());
             }
             super.close(status, trailers);
           }
