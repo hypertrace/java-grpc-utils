@@ -23,8 +23,7 @@ dependencies {
   compileOnly("org.projectlombok:lombok:1.18.24")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-  testImplementation("org.mockito:mockito-core:4.4.0")
-  testImplementation("org.mockito:mockito-inline:4.4.0")
+  testImplementation("org.mockito:mockito-core:5.8.0")
   testRuntimeOnly("io.grpc:grpc-netty")
 }
 

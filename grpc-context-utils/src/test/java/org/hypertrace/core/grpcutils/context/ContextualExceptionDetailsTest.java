@@ -10,11 +10,15 @@ import io.grpc.Metadata;
 import io.grpc.Metadata.Key;
 import io.grpc.Status;
 import io.grpc.StatusException;
+import io.grpc.StatusRuntimeException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class ContextualExceptionDetailsTest {
   static final String TEST_REQUEST_ID = "example-request-id";
   static final String TEST_TENANT = "example-tenant";
@@ -86,7 +90,8 @@ class ContextualExceptionDetailsTest {
   @Test
   void parsesMetadataWithMessage() {
     assertEquals(
-        Optional.of(new ContextualExceptionDetails(TEST_CONTEXT, "test message")),
+        Optional.of(
+            new ContextualExceptionDetails(TEST_CONTEXT).withExternalMessage("test message")),
         ContextualExceptionDetails.fromMetadata(
             metadataFromMap(
                 Map.of(
@@ -96,6 +101,44 @@ class ContextualExceptionDetailsTest {
                     TEST_TENANT,
                     EXTERNAL_MESSAGE_KEY.originalName(),
                     "test message"))));
+  }
+
+  @Test
+  void buildsFromExistingException() {
+    StatusRuntimeException exception =
+        ContextualStatusExceptionBuilder.from(
+                Status.INVALID_ARGUMENT
+                    .withDescription("test message")
+                    .asException(TEST_CONTEXT.buildTrailers()))
+            .useStatusDescriptionAsExternalMessage()
+            .buildRuntimeException();
+
+    assertEquals(
+        Set.of(REQUEST_ID_HEADER_KEY, TENANT_ID_HEADER_KEY, EXTERNAL_MESSAGE_KEY.originalName()),
+        exception.getTrailers().keys());
+    assertEquals(TEST_CONTEXT, RequestContext.fromMetadata(exception.getTrailers()));
+    assertEquals("test message", exception.getTrailers().get(EXTERNAL_MESSAGE_KEY));
+  }
+
+  @Test
+  void buildsFromExceptionWithCustomTrailers() {
+    Key<String> customKey = Key.of("test", ASCII_STRING_MARSHALLER);
+    Metadata customMetadata = new Metadata();
+    customMetadata.put(customKey, "test-value");
+    customMetadata.put(EXTERNAL_MESSAGE_KEY, "should be ignored");
+    StatusException exception =
+        ContextualStatusExceptionBuilder.from(
+                Status.INVALID_ARGUMENT
+                    .withDescription("test message")
+                    .asRuntimeException(customMetadata))
+            .withExternalMessage("custom message")
+            .buildCheckedException();
+
+    assertEquals(
+        Set.of(customKey.originalName(), EXTERNAL_MESSAGE_KEY.originalName()),
+        exception.getTrailers().keys());
+    assertEquals("custom message", exception.getTrailers().get(EXTERNAL_MESSAGE_KEY));
+    assertEquals("test-value", exception.getTrailers().get(customKey));
   }
 
   Metadata metadataFromMap(Map<String, String> metadataMap) {
