@@ -13,8 +13,8 @@ dependencies {
   implementation("io.grpc:grpc-context")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-  testImplementation("org.mockito:mockito-core:4.4.0")
-  testImplementation("org.mockito:mockito-junit-jupiter:4.4.0")
+  testImplementation("org.mockito:mockito-core:5.8.0")
+  testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
 }
 
 tasks.test {

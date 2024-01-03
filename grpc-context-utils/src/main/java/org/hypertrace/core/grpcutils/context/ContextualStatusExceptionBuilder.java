@@ -1,9 +1,12 @@
 package org.hypertrace.core.grpcutils.context;
 
+import io.grpc.Metadata;
 import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
+import java.util.Optional;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -16,11 +19,32 @@ import lombok.ToString;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ContextualStatusExceptionBuilder {
 
-  private final Status status;
-  ContextualExceptionDetails details;
+  @Nonnull private final Status status;
+  @Nullable private final Metadata originalTrailers;
+  @Nonnull ContextualExceptionDetails details;
 
   public static ContextualStatusExceptionBuilder from(Status status, RequestContext context) {
-    return new ContextualStatusExceptionBuilder(status, new ContextualExceptionDetails(context));
+    return new ContextualStatusExceptionBuilder(
+        status, null, new ContextualExceptionDetails(context));
+  }
+
+  public static ContextualStatusExceptionBuilder from(Status status) {
+    return new ContextualStatusExceptionBuilder(status, null, new ContextualExceptionDetails());
+  }
+
+  public static ContextualStatusExceptionBuilder from(StatusException statusException) {
+    return new ContextualStatusExceptionBuilder(
+        statusException.getStatus(),
+        statusException.getTrailers(),
+        new ContextualExceptionDetails());
+  }
+
+  public static ContextualStatusExceptionBuilder from(
+      StatusRuntimeException statusRuntimeException) {
+    return new ContextualStatusExceptionBuilder(
+        statusRuntimeException.getStatus(),
+        statusRuntimeException.getTrailers(),
+        new ContextualExceptionDetails());
   }
 
   public ContextualStatusExceptionBuilder useStatusDescriptionAsExternalMessage() {
@@ -34,10 +58,17 @@ public class ContextualStatusExceptionBuilder {
   }
 
   public StatusRuntimeException buildRuntimeException() {
-    return status.asRuntimeException(this.details.toMetadata());
+    return status.asRuntimeException(this.collectMetadata());
   }
 
   public StatusException buildCheckedException() {
-    return status.asException(this.details.toMetadata());
+    return status.asException(this.collectMetadata());
+  }
+
+  private Metadata collectMetadata() {
+    Metadata metadataCollector = new Metadata();
+    Optional.ofNullable(this.originalTrailers).ifPresent(metadataCollector::merge);
+    metadataCollector.merge(this.details.toMetadata());
+    return metadataCollector;
   }
 }
