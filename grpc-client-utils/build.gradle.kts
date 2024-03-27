@@ -11,7 +11,7 @@ dependencies {
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
   api("io.grpc:grpc-inprocess")
-  api(platform("io.netty:netty-bom:4.1.101.Final")) {
+  api(platform("io.netty:netty-bom:4.1.108.Final")) {
     because("CVE-2023-44487")
   }
 
