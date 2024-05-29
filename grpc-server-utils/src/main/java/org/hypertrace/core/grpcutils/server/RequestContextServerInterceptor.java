@@ -6,7 +6,10 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
+import java.util.Optional;
+import java.util.UUID;
 import org.hypertrace.core.grpcutils.context.RequestContext;
+import org.hypertrace.core.grpcutils.context.RequestContextConstants;
 
 /**
  * Interceptor which intercepts the request headers to extract request context and sets it in the
@@ -20,9 +23,18 @@ public class RequestContextServerInterceptor implements ServerInterceptor {
       ServerCall<ReqT, RespT> serverCall,
       Metadata metadata,
       ServerCallHandler<ReqT, RespT> serverCallHandler) {
-    RequestContext requestContext = RequestContext.fromMetadata(metadata);
-    Context ctx = Context.current().withValue(RequestContext.CURRENT, requestContext);
+    RequestContext currentContext =
+        Optional.ofNullable(RequestContext.CURRENT.get())
+            .orElseGet(() -> RequestContext.fromMetadata(metadata));
+    if (currentContext.getHeaderValue(RequestContextConstants.REQUEST_ID_HEADER_KEY).isEmpty()) {
+      currentContext.put(
+          RequestContextConstants.REQUEST_ID_HEADER_KEY, UUID.randomUUID().toString());
+    }
 
-    return Contexts.interceptCall(ctx, serverCall, metadata, serverCallHandler);
+    return Contexts.interceptCall(
+        Context.current().withValue(RequestContext.CURRENT, currentContext),
+        serverCall,
+        metadata,
+        serverCallHandler);
   }
 }
