@@ -63,7 +63,7 @@ public class ExternalExceptionInterceptor implements ServerInterceptor {
       return Status.fromCode(status.getCode())
           .withDescription(
               String.format("Request with id: %s failed with message: %s", requestId, message));
-    }c
+    }
 
     Optional<ContextualExceptionDetails> resolveContextDetails(
         Status status, Metadata headers, Metadata trailers) {
