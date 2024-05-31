@@ -29,7 +29,7 @@ public class ExternalExceptionInterceptor implements ServerInterceptor {
     return next.startCall(wrappedCall, headers);
   }
 
-  private static class ExceptionWrappedServerCall<ReqT, RespT>
+  private class ExceptionWrappedServerCall<ReqT, RespT>
       extends SimpleForwardingServerCall<ReqT, RespT> {
     private final Metadata headers;
 
@@ -46,26 +46,18 @@ public class ExternalExceptionInterceptor implements ServerInterceptor {
           details
               .flatMap(ContextualExceptionDetails::getRequestContext)
               .flatMap(RequestContext::getRequestId)
-              .orElseGet(() -> UUID.randomUUID().toString());
+              .orElseGet(ExternalExceptionInterceptor.this::generateDefaultRequestId);
       String message =
-          details.flatMap(ContextualExceptionDetails::getExternalMessage).orElse("Error");
-      Status externalStatus = getExternalStatus(status, requestId, message);
-      Metadata externalTrailers = buildExternalTrailers(requestId);
+          details
+              .flatMap(ContextualExceptionDetails::getExternalMessage)
+              .orElseGet(ExternalExceptionInterceptor.this::getDefaultErrorMessage);
+      Status externalStatus = buildExternalStatus(status, requestId, message);
+      Metadata externalTrailers = buildExternalTrailers(trailers, requestId);
       super.close(externalStatus, externalTrailers);
     }
 
     /** Remove sensitive information from status before sending back to client. */
-    private Status getExternalStatus(Status status, String requestId, String message) {
-      if (Status.OK.equals(status)) {
-        return status;
-      }
-
-      return Status.fromCode(status.getCode())
-          .withDescription(
-              String.format("Request with id: %s failed with message: %s", requestId, message));
-    }
-
-    Optional<ContextualExceptionDetails> resolveContextDetails(
+    private Optional<ContextualExceptionDetails> resolveContextDetails(
         Status status, Metadata headers, Metadata trailers) {
       // Preference to the returned trailers then thread local value and finally calling headers
       return ContextualExceptionDetails.fromMetadata(trailers)
@@ -75,14 +67,32 @@ public class ExternalExceptionInterceptor implements ServerInterceptor {
                   details.getRequestContext().flatMap(RequestContext::getRequestId).isPresent())
           .or(() -> ContextualExceptionDetails.fromMetadata(headers));
     }
+  }
 
-    /** For now, only propagate request ID */
-    private Metadata buildExternalTrailers(String requestId) {
-      Metadata externalTrailers = new Metadata();
-      externalTrailers.put(
-          Metadata.Key.of(RequestContextConstants.REQUEST_ID_HEADER_KEY, ASCII_STRING_MARSHALLER),
-          requestId);
-      return externalTrailers;
+  protected String generateDefaultRequestId() {
+    return UUID.randomUUID().toString();
+  }
+
+  protected String getDefaultErrorMessage() {
+    return "Error";
+  }
+
+  protected Status buildExternalStatus(Status status, String requestId, String message) {
+    if (Status.OK.equals(status)) {
+      return status;
     }
+
+    return Status.fromCode(status.getCode())
+        .withDescription(
+            String.format("Request with id: %s failed with message: %s", requestId, message));
+  }
+
+  /** For now, only propagate request ID */
+  protected Metadata buildExternalTrailers(Metadata receivedTrailers, String requestId) {
+    Metadata externalTrailers = new Metadata();
+    externalTrailers.put(
+        Metadata.Key.of(RequestContextConstants.REQUEST_ID_HEADER_KEY, ASCII_STRING_MARSHALLER),
+        requestId);
+    return externalTrailers;
   }
 }
