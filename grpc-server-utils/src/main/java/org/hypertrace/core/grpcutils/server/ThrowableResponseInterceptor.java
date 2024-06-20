@@ -1,5 +1,6 @@
 package org.hypertrace.core.grpcutils.server;
 
+import static io.grpc.Status.Code.RESOURCE_EXHAUSTED;
 import static io.grpc.Status.Code.UNKNOWN;
 import static java.util.Objects.isNull;
 
@@ -11,9 +12,13 @@ import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import java.util.Optional;
 import org.hypertrace.core.grpcutils.context.RequestContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Server Interceptor that decorates the error response status before closing the call */
 public class ThrowableResponseInterceptor implements ServerInterceptor {
+  private static Logger LOG = LoggerFactory.getLogger(ThrowableResponseInterceptor.class);
+
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
       ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
@@ -34,6 +39,14 @@ public class ThrowableResponseInterceptor implements ServerInterceptor {
                       .withDescription(status.getCause().getMessage())
                       .withCause(status.getCause());
             }
+
+            // Logging this for RESOURCE_EXHAUSTED so that we can track which method is being called
+            // with large payloads
+            if (status.getCode() == RESOURCE_EXHAUSTED) {
+              String methodName = delegate().getMethodDescriptor().getFullMethodName();
+              LOG.info("RESOURCE_EXHAUSTED invoking method {}", methodName);
+            }
+
             super.close(
                 status,
                 collectAndMergeMetadata(RequestContext.fromMetadata(headers), trailers, status));
