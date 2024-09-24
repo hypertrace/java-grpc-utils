@@ -11,12 +11,14 @@ dependencies {
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
   api("io.grpc:grpc-inprocess")
-  api(platform("io.netty:netty-bom:4.1.108.Final")) {
-    because("CVE-2023-44487")
+  constraints {
+    api("com.google.protobuf:protobuf-java:3.25.5") {
+      because("https://nvd.nist.gov/vuln/detail/CVE-2024-7254")
+    }
   }
 
   implementation(project(":grpc-context-utils"))
-  implementation("org.slf4j:slf4j-api:1.7.36")
+  implementation("org.slf4j:slf4j-api:2.0.7")
   implementation("io.grpc:grpc-core")
 
   annotationProcessor("org.projectlombok:lombok:1.18.24")
