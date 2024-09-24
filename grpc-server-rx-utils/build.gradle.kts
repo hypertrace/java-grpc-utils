@@ -18,7 +18,7 @@ dependencies {
   annotationProcessor("org.projectlombok:lombok:1.18.24")
   compileOnly("org.projectlombok:lombok:1.18.24")
 
-  implementation("org.slf4j:slf4j-api:2.0.7")
+  implementation("org.slf4j:slf4j-api:1.7.36")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
   testImplementation("org.mockito:mockito-core:5.8.0")
