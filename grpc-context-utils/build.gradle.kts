@@ -12,6 +12,11 @@ tasks.test {
 dependencies {
   api(platform("io.grpc:grpc-bom:1.60.0"))
   api(platform("com.fasterxml.jackson:jackson-bom:2.16.0"))
+  constraints {
+    api("com.google.protobuf:protobuf-java:3.25.5") {
+      because("https://nvd.nist.gov/vuln/detail/CVE-2024-7254")
+    }
+  }
   implementation("io.grpc:grpc-core")
 
   implementation("com.auth0:java-jwt:4.4.0")

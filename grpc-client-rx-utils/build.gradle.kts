@@ -10,6 +10,11 @@ dependencies {
   api("io.reactivex.rxjava3:rxjava:3.1.4")
   api("io.grpc:grpc-stub")
   api(project(":grpc-context-utils"))
+  constraints {
+    api("com.google.protobuf:protobuf-java:3.25.5") {
+      because("https://nvd.nist.gov/vuln/detail/CVE-2024-7254")
+    }
+  }
   implementation("io.grpc:grpc-context")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")

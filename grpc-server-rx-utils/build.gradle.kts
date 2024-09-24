@@ -9,6 +9,11 @@ dependencies {
   api(platform("io.grpc:grpc-bom:1.60.0"))
   api("io.reactivex.rxjava3:rxjava:3.1.4")
   api("io.grpc:grpc-stub")
+  constraints {
+    api("com.google.protobuf:protobuf-java:3.25.5") {
+      because("https://nvd.nist.gov/vuln/detail/CVE-2024-7254")
+    }
+  }
 
   annotationProcessor("org.projectlombok:lombok:1.18.24")
   compileOnly("org.projectlombok:lombok:1.18.24")
