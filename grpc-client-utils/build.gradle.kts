@@ -7,11 +7,11 @@ plugins {
 
 dependencies {
 
-  api(platform("io.grpc:grpc-bom:1.60.0"))
+  api(platform("io.grpc:grpc-bom:1.68.1"))
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
   api("io.grpc:grpc-inprocess")
-  api(platform("io.netty:netty-bom:4.1.108.Final")) {
+  api(platform("io.netty:netty-bom:4.1.115.Final")) {
     because("CVE-2023-44487")
   }
   constraints {
