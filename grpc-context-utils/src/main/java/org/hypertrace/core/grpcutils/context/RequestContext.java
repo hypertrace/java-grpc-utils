@@ -33,6 +33,12 @@ public class RequestContext {
   public static final Context.Key<RequestContext> CURRENT = Context.key("request_context");
   private static final JwtParser JWT_PARSER = new JwtParser();
 
+  public RequestContext() {}
+
+  public RequestContext(RequestContext otherContext) {
+    this.headers.putAll(otherContext.headers);
+  }
+
   public static RequestContext forTenantId(String tenantId) {
     return new RequestContext()
         .put(RequestContextConstants.TENANT_ID_HEADER_KEY, tenantId)
