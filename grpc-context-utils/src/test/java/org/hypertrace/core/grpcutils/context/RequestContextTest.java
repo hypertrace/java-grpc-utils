@@ -50,6 +50,15 @@ public class RequestContextTest {
   }
 
   @Test
+  void testCopyConstructor() {
+    RequestContext originalContext = new RequestContext();
+    originalContext.put(RequestContextConstants.AUTHORIZATION_HEADER, TEST_AUTH_HEADER);
+    originalContext.put("x-some-tenant-header", "v1");
+
+    assertEquals(originalContext, new RequestContext(originalContext));
+  }
+
+  @Test
   void testCreateForTenantId() {
     RequestContext requestContext = RequestContext.forTenantId(TENANT_ID);
     String requestId = requestContext.getRequestId().orElseThrow();
