@@ -10,13 +10,11 @@ tasks.test {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.68.1"))
+  api(platform("io.grpc:grpc-bom:1.68.3"))
   api("io.grpc:grpc-context")
   api("io.grpc:grpc-api")
 
-  api(platform("io.netty:netty-bom:4.1.115.Final")) {
-    because("CVE-2023-44487")
-  }
+  api(platform("io.netty:netty-bom:4.1.118.Final"))
   constraints {
     api("com.google.protobuf:protobuf-java:3.25.5") {
       because("https://nvd.nist.gov/vuln/detail/CVE-2024-7254")
