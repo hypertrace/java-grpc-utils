@@ -3,12 +3,14 @@ package org.hypertrace.circuitbreaker.grpcutils.resilience;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import jakarta.inject.Singleton;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfigProvider;
+import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfigParser;
 
 /** Utility class to provide Resilience4j CircuitBreakerRegistry */
 @Slf4j
+@Singleton
 public class ResilienceCircuitBreakerRegistryProvider {
   private final Map<String, CircuitBreakerConfig> circuitBreakerConfigMap;
 
@@ -20,8 +22,7 @@ public class ResilienceCircuitBreakerRegistryProvider {
   public CircuitBreakerRegistry getCircuitBreakerRegistry() {
     CircuitBreakerRegistry circuitBreakerRegistry =
         CircuitBreakerRegistry.of(
-            this.circuitBreakerConfigMap.get(CircuitBreakerConfigProvider.DEFAULT_CONFIG_KEY));
-
+            this.circuitBreakerConfigMap.get(CircuitBreakerConfigParser.DEFAULT_CONFIG_KEY));
     circuitBreakerRegistry
         .getEventPublisher()
         .onEntryAdded(

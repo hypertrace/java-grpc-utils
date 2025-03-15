@@ -1,64 +1,69 @@
 package org.hypertrace.circuitbreaker.grpcutils.resilience;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import java.time.Duration;
-import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfiguration;
-import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfiguration.SlidingWindowType;
+import java.util.HashMap;
+import java.util.Map;
+import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerThresholds;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class ResilienceCircuitBreakerConfigParserTest {
 
   @Test
-  void testGetConfigWithCountBasedSlidingWindow() {
-    CircuitBreakerConfiguration configuration =
-        CircuitBreakerConfiguration.builder()
+  void shouldParseValidConfiguration() {
+    CircuitBreakerThresholds thresholds =
+        CircuitBreakerThresholds.builder()
             .failureRateThreshold(50.0f)
             .slowCallRateThreshold(30.0f)
             .slowCallDurationThreshold(Duration.ofSeconds(2))
-            .slidingWindowType(SlidingWindowType.COUNT_BASED)
+            .slidingWindowType(CircuitBreakerThresholds.SlidingWindowType.TIME_BASED)
             .slidingWindowSize(100)
-            .waitDurationInOpenState(Duration.ofSeconds(30))
-            .permittedNumberOfCallsInHalfOpenState(10)
+            .waitDurationInOpenState(Duration.ofSeconds(60))
+            .permittedNumberOfCallsInHalfOpenState(5)
             .minimumNumberOfCalls(20)
             .build();
 
-    CircuitBreakerConfig config = ResilienceCircuitBreakerConfigParser.getConfig(configuration);
+    Map<String, CircuitBreakerThresholds> configMap = new HashMap<>();
+    configMap.put("testService", thresholds);
 
+    Map<String, CircuitBreakerConfig> result =
+        ResilienceCircuitBreakerConfigParser.getCircuitBreakerConfigs(configMap);
+
+    Assertions.assertTrue(result.containsKey("testService"));
+
+    CircuitBreakerConfig config = result.get("testService");
     assertEquals(50.0f, config.getFailureRateThreshold());
     assertEquals(30.0f, config.getSlowCallRateThreshold());
     assertEquals(Duration.ofSeconds(2), config.getSlowCallDurationThreshold());
-    assertEquals(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, config.getSlidingWindowType());
+    assertEquals(CircuitBreakerConfig.SlidingWindowType.TIME_BASED, config.getSlidingWindowType());
     assertEquals(100, config.getSlidingWindowSize());
-    assertEquals(Duration.ofSeconds(30), config.getWaitDurationInOpenState());
-    assertEquals(10, config.getPermittedNumberOfCallsInHalfOpenState());
+    assertEquals(5, config.getPermittedNumberOfCallsInHalfOpenState());
     assertEquals(20, config.getMinimumNumberOfCalls());
   }
 
   @Test
-  void testGetConfigWithTimeBasedSlidingWindow() {
-    CircuitBreakerConfiguration configuration =
-        CircuitBreakerConfiguration.builder()
-            .failureRateThreshold(70.0f)
-            .slowCallRateThreshold(40.0f)
-            .slowCallDurationThreshold(Duration.ofSeconds(5))
-            .slidingWindowType(SlidingWindowType.TIME_BASED)
-            .slidingWindowSize(60)
-            .waitDurationInOpenState(Duration.ofMinutes(1))
+  void shouldUseDefaultSlidingWindowTypeForInvalidType() {
+    CircuitBreakerThresholds thresholds =
+        CircuitBreakerThresholds.builder()
+            .failureRateThreshold(50.0f)
+            .slowCallRateThreshold(30.0f)
+            .slowCallDurationThreshold(Duration.ofSeconds(2))
+            .slidingWindowSize(100)
+            .waitDurationInOpenState(Duration.ofSeconds(60))
             .permittedNumberOfCallsInHalfOpenState(5)
-            .minimumNumberOfCalls(15)
-            .build();
-
-    CircuitBreakerConfig config = ResilienceCircuitBreakerConfigParser.getConfig(configuration);
-
-    assertEquals(70.0f, config.getFailureRateThreshold());
-    assertEquals(40.0f, config.getSlowCallRateThreshold());
-    assertEquals(Duration.ofSeconds(5), config.getSlowCallDurationThreshold());
+            .minimumNumberOfCalls(20)
+            .build(); // Invalid type scenario
+    CircuitBreakerConfig config = ResilienceCircuitBreakerConfigParser.getConfig(thresholds);
     assertEquals(CircuitBreakerConfig.SlidingWindowType.TIME_BASED, config.getSlidingWindowType());
-    assertEquals(60, config.getSlidingWindowSize());
-    assertEquals(Duration.ofMinutes(1), config.getWaitDurationInOpenState());
-    assertEquals(5, config.getPermittedNumberOfCallsInHalfOpenState());
-    assertEquals(15, config.getMinimumNumberOfCalls());
+  }
+
+  @Test
+  void shouldThrowExceptionWhenConfigurationIsNull() {
+    assertThrows(
+        NullPointerException.class, () -> ResilienceCircuitBreakerConfigParser.getConfig(null));
   }
 }

@@ -1,8 +1,6 @@
 package org.hypertrace.circuitbreaker.grpcutils.resilience;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Singleton;
-import com.typesafe.config.Config;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -20,45 +18,44 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfigProvider;
+import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfiguration;
 import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerInterceptor;
+import org.hypertrace.core.grpcutils.context.RequestContext;
 
 @Slf4j
-@Singleton
 public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerInterceptor {
 
-  public static final CallOptions.Key<String> CIRCUIT_BREAKER_KEY =
-      CallOptions.Key.createWithDefault("circuitBreakerKey", "default");
   private final CircuitBreakerRegistry resilicenceCircuitBreakerRegistry;
-  private final CircuitBreakerConfigProvider circuitBreakerConfigProvider;
-  private final Map<String, CircuitBreakerConfig> resilienceCircuitBreakerConfig;
+  private final Map<String, CircuitBreakerConfig> resilienceCircuitBreakerConfigMap;
   private final ResilienceCircuitBreakerProvider resilienceCircuitBreakerProvider;
+  private final CircuitBreakerConfiguration<?> circuitBreakerConfiguration;
   private final Clock clock;
 
-  public ResilienceCircuitBreakerInterceptor(Config config, Clock clock) {
-    this.circuitBreakerConfigProvider = new CircuitBreakerConfigProvider(config);
-    this.resilienceCircuitBreakerConfig =
+  public ResilienceCircuitBreakerInterceptor(
+      CircuitBreakerConfiguration<?> circuitBreakerConfiguration, Clock clock) {
+    this.circuitBreakerConfiguration = circuitBreakerConfiguration;
+    this.clock = clock;
+    this.resilienceCircuitBreakerConfigMap =
         ResilienceCircuitBreakerConfigParser.getCircuitBreakerConfigs(
-            circuitBreakerConfigProvider.getConfigMap());
+            circuitBreakerConfiguration.getCircuitBreakerThresholdsMap());
     this.resilicenceCircuitBreakerRegistry =
-        new ResilienceCircuitBreakerRegistryProvider(resilienceCircuitBreakerConfig)
+        new ResilienceCircuitBreakerRegistryProvider(resilienceCircuitBreakerConfigMap)
             .getCircuitBreakerRegistry();
     this.resilienceCircuitBreakerProvider =
         new ResilienceCircuitBreakerProvider(
-            resilicenceCircuitBreakerRegistry, resilienceCircuitBreakerConfig);
-    this.clock = clock;
+            resilicenceCircuitBreakerRegistry, resilienceCircuitBreakerConfigMap);
   }
 
   @VisibleForTesting
   public ResilienceCircuitBreakerInterceptor(
-      Config config,
       Clock clock,
       CircuitBreakerRegistry resilicenceCircuitBreakerRegistry,
-      ResilienceCircuitBreakerProvider resilienceCircuitBreakerProvider) {
-    this.circuitBreakerConfigProvider = new CircuitBreakerConfigProvider(config);
-    this.resilienceCircuitBreakerConfig =
+      ResilienceCircuitBreakerProvider resilienceCircuitBreakerProvider,
+      CircuitBreakerConfiguration<?> circuitBreakerConfiguration) {
+    this.circuitBreakerConfiguration = circuitBreakerConfiguration;
+    this.resilienceCircuitBreakerConfigMap =
         ResilienceCircuitBreakerConfigParser.getCircuitBreakerConfigs(
-            circuitBreakerConfigProvider.getConfigMap());
+            circuitBreakerConfiguration.getCircuitBreakerThresholdsMap());
     this.resilicenceCircuitBreakerRegistry = resilicenceCircuitBreakerRegistry;
     this.resilienceCircuitBreakerProvider = resilienceCircuitBreakerProvider;
     this.clock = clock;
@@ -66,18 +63,17 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
 
   @Override
   protected boolean isCircuitBreakerEnabled() {
-    return circuitBreakerConfigProvider.isCircuitBreakerEnabled();
+    return circuitBreakerConfiguration.isEnabled();
   }
 
   @Override
   protected <ReqT, RespT> ClientCall<ReqT, RespT> createInterceptedCall(
       MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
-    // Get circuit breaker key from CallOptions
-    String circuitBreakerKey = callOptions.getOption(CIRCUIT_BREAKER_KEY);
-    CircuitBreaker circuitBreaker =
-        resilienceCircuitBreakerProvider.getCircuitBreaker(circuitBreakerKey);
     return new ForwardingClientCall.SimpleForwardingClientCall<>(
         next.newCall(method, callOptions)) {
+      CircuitBreaker circuitBreaker;
+      String circuitBreakerKey;
+
       @Override
       public void start(Listener<RespT> responseListener, Metadata headers) {
         Instant startTime = clock.instant();
@@ -87,8 +83,22 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
         super.start(wrappedListener, headers);
       }
 
+      @SuppressWarnings("unchecked")
       @Override
       public void sendMessage(ReqT message) {
+        CircuitBreakerConfiguration<ReqT> config =
+            (CircuitBreakerConfiguration<ReqT>) circuitBreakerConfiguration;
+        if (config.getRequestClass() == null
+            || (!message.getClass().equals(config.getRequestClass()))) {
+          log.warn("Invalid config for message type: {}", message.getClass());
+          super.sendMessage(message);
+        }
+        if (config.getKeyFunction() != null) {
+          circuitBreakerKey = config.getKeyFunction().apply(RequestContext.CURRENT.get(), message);
+        } else {
+          circuitBreakerKey = "default";
+        }
+        circuitBreaker = resilienceCircuitBreakerProvider.getCircuitBreaker(circuitBreakerKey);
         if (!circuitBreaker.tryAcquirePermission()) {
           logCircuitBreakerRejection(circuitBreakerKey, circuitBreaker);
           String rejectionReason =

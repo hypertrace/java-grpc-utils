@@ -9,6 +9,7 @@ dependencies {
 
   api(platform("io.grpc:grpc-bom:1.68.3"))
   api("io.grpc:grpc-api")
+  api(project(":grpc-context-utils"))
 
   implementation("org.slf4j:slf4j-api:1.7.36")
   implementation("io.github.resilience4j:resilience4j-circuitbreaker:1.7.1")

@@ -6,12 +6,9 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CircuitBreakerConfigProvider {
+public class CircuitBreakerConfigParser {
 
   public static final String DEFAULT_CONFIG_KEY = "default";
-
-  // Whether to enable circuit breaker or not.
-  private static final String ENABLED = "enabled";
 
   // Percentage of failures to trigger OPEN state
   private static final String FAILURE_RATE_THRESHOLD = "failureRateThreshold";
@@ -31,42 +28,23 @@ public class CircuitBreakerConfigProvider {
       "permittedNumberOfCallsInHalfOpenState";
   private static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
 
-  // Global flag for circuit breaker enablement
-  private boolean circuitBreakerEnabled = false;
-  private Map<String, CircuitBreakerConfiguration> circuitBreakerConfigurationMap;
-
-  public CircuitBreakerConfigProvider(Config config) {
-    this.initialize(config);
-  }
-
-  /** Checks if Circuit Breaker is globally enabled. */
-  public boolean isCircuitBreakerEnabled() {
-    return circuitBreakerEnabled;
-  }
-
-  private void initialize(Config circuitBreakerConfig) {
-    circuitBreakerEnabled =
-        circuitBreakerConfig.hasPath(ENABLED) && circuitBreakerConfig.getBoolean(ENABLED);
-    this.circuitBreakerConfigurationMap =
-        circuitBreakerConfig.root().keySet().stream()
-            .filter(key -> !key.equals(ENABLED)) // Ignore the global enabled flag
+  public static <T> CircuitBreakerConfiguration.CircuitBreakerConfigurationBuilder<T> parseConfig(
+      Config config) {
+    CircuitBreakerConfiguration.CircuitBreakerConfigurationBuilder<T> builder =
+        CircuitBreakerConfiguration.builder();
+    Map<String, CircuitBreakerThresholds> circuitBreakerThresholdsMap =
+        config.root().keySet().stream()
             .collect(
                 Collectors.toMap(
                     key -> key, // Circuit breaker key
-                    key -> createCircuitBreakerConfig(circuitBreakerConfig.getConfig(key))));
-    log.info(
-        "Loaded {} circuit breaker configurations, Global Enabled: {}. Configs: {}",
-        circuitBreakerConfigurationMap.size(),
-        circuitBreakerEnabled,
-        circuitBreakerConfigurationMap);
+                    key -> buildCircuitBreakerThresholds(config.getConfig(key))));
+    builder.circuitBreakerThresholdsMap(circuitBreakerThresholdsMap);
+    log.info("Loaded circuit breaker configs: {}", circuitBreakerThresholdsMap);
+    return builder;
   }
 
-  public Map<String, CircuitBreakerConfiguration> getConfigMap() {
-    return circuitBreakerConfigurationMap;
-  }
-
-  private CircuitBreakerConfiguration createCircuitBreakerConfig(Config config) {
-    return CircuitBreakerConfiguration.builder()
+  private static CircuitBreakerThresholds buildCircuitBreakerThresholds(Config config) {
+    return CircuitBreakerThresholds.builder()
         .failureRateThreshold((float) config.getDouble(FAILURE_RATE_THRESHOLD))
         .slowCallRateThreshold((float) config.getDouble(SLOW_CALL_RATE_THRESHOLD))
         .slowCallDurationThreshold(config.getDuration(SLOW_CALL_DURATION_THRESHOLD))
@@ -79,8 +57,8 @@ public class CircuitBreakerConfigProvider {
         .build();
   }
 
-  private CircuitBreakerConfiguration.SlidingWindowType getSlidingWindowType(
+  private static CircuitBreakerThresholds.SlidingWindowType getSlidingWindowType(
       String slidingWindowType) {
-    return CircuitBreakerConfiguration.SlidingWindowType.valueOf(slidingWindowType);
+    return CircuitBreakerThresholds.SlidingWindowType.valueOf(slidingWindowType);
   }
 }
