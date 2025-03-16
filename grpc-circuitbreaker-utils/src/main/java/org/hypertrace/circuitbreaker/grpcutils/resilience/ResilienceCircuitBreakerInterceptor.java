@@ -88,15 +88,15 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
       public void sendMessage(ReqT message) {
         CircuitBreakerConfiguration<ReqT> config =
             (CircuitBreakerConfiguration<ReqT>) circuitBreakerConfiguration;
-        if (config.getRequestClass() == null
-            || (!message.getClass().equals(config.getRequestClass()))) {
-          log.warn("Invalid config for message type: {}", message.getClass());
-          super.sendMessage(message);
-        }
-        if (config.getKeyFunction() != null) {
-          circuitBreakerKey = config.getKeyFunction().apply(RequestContext.CURRENT.get(), message);
-        } else {
+        if (config.getRequestClass() == null || config.getKeyFunction() == null) {
+          log.debug("Circuit breaker will apply to all requests as config is not set");
           circuitBreakerKey = "default";
+        } else {
+          if (!message.getClass().equals(config.getRequestClass())) {
+            log.warn("Invalid config for message type: {}", message.getClass());
+            super.sendMessage(message);
+          }
+          circuitBreakerKey = config.getKeyFunction().apply(RequestContext.CURRENT.get(), message);
         }
         circuitBreaker = resilienceCircuitBreakerProvider.getCircuitBreaker(circuitBreakerKey);
         if (!circuitBreaker.tryAcquirePermission()) {
