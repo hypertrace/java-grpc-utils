@@ -11,7 +11,9 @@ import io.grpc.*;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfigParser;
 import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,7 @@ class ResilienceCircuitBreakerInterceptorTest {
   @Mock private CircuitBreaker mockCircuitBreaker;
   @Mock private Metadata mockMetadata;
   @Mock private ClientCall.Listener<Object> mockListener;
+  @Mock private ResilienceCircuitBreakerRegistryProvider mockCircuitBreakerRegistryProvider;
   @Mock private ResilienceCircuitBreakerProvider mockCircuitBreakerProvider;
   @Mock private CircuitBreakerConfiguration<Object> mockCircuitBreakerConfig;
   @Mock private CircuitBreakerRegistry mockCircuitBreakerRegistry;
@@ -39,7 +42,13 @@ class ResilienceCircuitBreakerInterceptorTest {
 
     fixedClock = Clock.fixed(Instant.now(), ZoneOffset.UTC);
     when(mockChannel.newCall(any(), any())).thenReturn(mockClientCall);
+    //    when(mockCircuitBreakerRegistryProvider.getCircuitBreakerRegistry())
+    //        .thenReturn(mockCircuitBreakerRegistry);
     when(mockCircuitBreakerProvider.getCircuitBreaker(anyString())).thenReturn(mockCircuitBreaker);
+    when(mockCircuitBreakerConfig.getDefaultCircuitBreakerKey()).thenReturn("global");
+    when(mockCircuitBreakerConfig.getCircuitBreakerThresholdsMap())
+        .thenReturn(
+            Map.of("global", CircuitBreakerConfigParser.buildCircuitBreakerDefaultThresholds()));
   }
 
   @Test
@@ -49,10 +58,10 @@ class ResilienceCircuitBreakerInterceptorTest {
 
     ResilienceCircuitBreakerInterceptor interceptor =
         new ResilienceCircuitBreakerInterceptor(
+            mockCircuitBreakerConfig,
             fixedClock,
             mockCircuitBreakerRegistry,
-            mockCircuitBreakerProvider,
-            mockCircuitBreakerConfig);
+            mockCircuitBreakerProvider);
 
     ClientCall<Object, Object> interceptedCall =
         interceptor.createInterceptedCall(
@@ -70,10 +79,10 @@ class ResilienceCircuitBreakerInterceptorTest {
     when(mockCircuitBreaker.getState()).thenReturn(CircuitBreaker.State.OPEN);
     ResilienceCircuitBreakerInterceptor interceptor =
         new ResilienceCircuitBreakerInterceptor(
+            mockCircuitBreakerConfig,
             fixedClock,
             mockCircuitBreakerRegistry,
-            mockCircuitBreakerProvider,
-            mockCircuitBreakerConfig);
+            mockCircuitBreakerProvider);
 
     ClientCall<Object, Object> interceptedCall =
         interceptor.createInterceptedCall(
@@ -95,10 +104,10 @@ class ResilienceCircuitBreakerInterceptorTest {
     when(mockCircuitBreaker.getState()).thenReturn(CircuitBreaker.State.HALF_OPEN);
     ResilienceCircuitBreakerInterceptor interceptor =
         new ResilienceCircuitBreakerInterceptor(
+            mockCircuitBreakerConfig,
             fixedClock,
             mockCircuitBreakerRegistry,
-            mockCircuitBreakerProvider,
-            mockCircuitBreakerConfig);
+            mockCircuitBreakerProvider);
 
     ClientCall<Object, Object> interceptedCall =
         interceptor.createInterceptedCall(
@@ -119,10 +128,10 @@ class ResilienceCircuitBreakerInterceptorTest {
     when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(true);
     ResilienceCircuitBreakerInterceptor interceptor =
         new ResilienceCircuitBreakerInterceptor(
+            mockCircuitBreakerConfig,
             fixedClock,
             mockCircuitBreakerRegistry,
-            mockCircuitBreakerProvider,
-            mockCircuitBreakerConfig);
+            mockCircuitBreakerProvider);
 
     ClientCall<Object, Object> interceptedCall =
         interceptor.createInterceptedCall(
@@ -146,10 +155,10 @@ class ResilienceCircuitBreakerInterceptorTest {
     when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(true);
     ResilienceCircuitBreakerInterceptor interceptor =
         new ResilienceCircuitBreakerInterceptor(
+            mockCircuitBreakerConfig,
             fixedClock,
             mockCircuitBreakerRegistry,
-            mockCircuitBreakerProvider,
-            mockCircuitBreakerConfig);
+            mockCircuitBreakerProvider);
 
     ClientCall<Object, Object> interceptedCall =
         interceptor.createInterceptedCall(

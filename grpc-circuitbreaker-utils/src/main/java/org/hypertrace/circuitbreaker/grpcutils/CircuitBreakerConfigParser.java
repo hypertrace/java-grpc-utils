@@ -1,7 +1,9 @@
 package org.hypertrace.circuitbreaker.grpcutils;
 
 import com.typesafe.config.Config;
+import java.time.Duration;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 public class CircuitBreakerConfigParser {
 
   public static final String DEFAULT_CONFIG_KEY = "default";
+  private static final Set<String> nonThresholdKeys =
+      Set.of("enabled", "defaultCircuitBreakerKey", "defaultThresholds");
 
   // Percentage of failures to trigger OPEN state
   private static final String FAILURE_RATE_THRESHOLD = "failureRateThreshold";
@@ -27,19 +31,38 @@ public class CircuitBreakerConfigParser {
   private static final String PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE =
       "permittedNumberOfCallsInHalfOpenState";
   private static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
+  public static final String ENABLED = "enabled";
+  public static final String DEFAULT_CIRCUIT_BREAKER_KEY = "defaultCircuitBreakerKey";
+  public static final String DEFAULT_THRESHOLDS = "defaultThresholds";
 
   public static <T> CircuitBreakerConfiguration.CircuitBreakerConfigurationBuilder<T> parseConfig(
       Config config) {
     CircuitBreakerConfiguration.CircuitBreakerConfigurationBuilder<T> builder =
         CircuitBreakerConfiguration.builder();
+    if (config.hasPath(ENABLED)) {
+      builder.enabled(config.getBoolean(ENABLED));
+    }
+
+    if (config.hasPath(DEFAULT_CIRCUIT_BREAKER_KEY)) {
+      builder.defaultCircuitBreakerKey(config.getString(DEFAULT_CIRCUIT_BREAKER_KEY));
+    }
+
+    if (config.hasPath(DEFAULT_THRESHOLDS)) {
+      builder.defaultThresholds(
+          buildCircuitBreakerThresholds(config.getConfig(DEFAULT_THRESHOLDS)));
+    } else {
+      builder.defaultThresholds(buildCircuitBreakerDefaultThresholds());
+    }
+
     Map<String, CircuitBreakerThresholds> circuitBreakerThresholdsMap =
         config.root().keySet().stream()
+            .filter(key -> !nonThresholdKeys.contains(key)) // Filter out non-threshold keys
             .collect(
                 Collectors.toMap(
                     key -> key, // Circuit breaker key
                     key -> buildCircuitBreakerThresholds(config.getConfig(key))));
     builder.circuitBreakerThresholdsMap(circuitBreakerThresholdsMap);
-    log.info("Loaded circuit breaker configs: {}", circuitBreakerThresholdsMap);
+    log.info("Loaded circuit breaker configs: {}", builder);
     return builder;
   }
 
@@ -54,6 +77,19 @@ public class CircuitBreakerConfigParser {
         .permittedNumberOfCallsInHalfOpenState(
             config.getInt(PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE))
         .minimumNumberOfCalls(config.getInt(MINIMUM_NUMBER_OF_CALLS))
+        .build();
+  }
+
+  public static CircuitBreakerThresholds buildCircuitBreakerDefaultThresholds() {
+    return CircuitBreakerThresholds.builder()
+        .failureRateThreshold(50f)
+        .slowCallRateThreshold(50f)
+        .slowCallDurationThreshold(Duration.ofSeconds(2))
+        .slidingWindowType(CircuitBreakerThresholds.SlidingWindowType.TIME_BASED)
+        .slidingWindowSize(60)
+        .waitDurationInOpenState(Duration.ofSeconds(60))
+        .permittedNumberOfCallsInHalfOpenState(5)
+        .minimumNumberOfCalls(10)
         .build();
   }
 

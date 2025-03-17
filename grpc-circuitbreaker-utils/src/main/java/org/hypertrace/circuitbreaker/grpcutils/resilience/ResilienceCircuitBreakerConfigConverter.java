@@ -6,15 +6,15 @@ import java.util.stream.Collectors;
 import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerThresholds;
 
 /** Utility class to parse CircuitBreakerConfiguration to Resilience4j CircuitBreakerConfig */
-public class ResilienceCircuitBreakerConfigParser {
+public class ResilienceCircuitBreakerConfigConverter {
 
   public static Map<String, CircuitBreakerConfig> getCircuitBreakerConfigs(
       Map<String, CircuitBreakerThresholds> configurationMap) {
     return configurationMap.entrySet().stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, entry -> getConfig(entry.getValue())));
+        .collect(Collectors.toMap(Map.Entry::getKey, entry -> convertConfig(entry.getValue())));
   }
 
-  static CircuitBreakerConfig getConfig(CircuitBreakerThresholds configuration) {
+  static CircuitBreakerConfig convertConfig(CircuitBreakerThresholds configuration) {
     return CircuitBreakerConfig.custom()
         .failureRateThreshold(configuration.getFailureRateThreshold())
         .slowCallRateThreshold(configuration.getSlowCallRateThreshold())
@@ -30,9 +30,6 @@ public class ResilienceCircuitBreakerConfigParser {
 
   private static CircuitBreakerConfig.SlidingWindowType getSlidingWindowType(
       CircuitBreakerThresholds.SlidingWindowType slidingWindowType) {
-    if (slidingWindowType == null) {
-      return CircuitBreakerConfig.SlidingWindowType.TIME_BASED;
-    }
     switch (slidingWindowType) {
       case COUNT_BASED:
         return CircuitBreakerConfig.SlidingWindowType.COUNT_BASED;

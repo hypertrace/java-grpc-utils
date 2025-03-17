@@ -1,28 +1,24 @@
 package org.hypertrace.circuitbreaker.grpcutils.resilience;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import jakarta.inject.Singleton;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfigParser;
+import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerThresholds;
 
 /** Utility class to provide Resilience4j CircuitBreakerRegistry */
 @Slf4j
-@Singleton
 public class ResilienceCircuitBreakerRegistryProvider {
-  private final Map<String, CircuitBreakerConfig> circuitBreakerConfigMap;
+  private final CircuitBreakerThresholds circuitBreakerThresholds;
 
   public ResilienceCircuitBreakerRegistryProvider(
-      Map<String, CircuitBreakerConfig> circuitBreakerConfigMap) {
-    this.circuitBreakerConfigMap = circuitBreakerConfigMap;
+      CircuitBreakerThresholds circuitBreakerThresholds) {
+    this.circuitBreakerThresholds = circuitBreakerThresholds;
   }
 
   public CircuitBreakerRegistry getCircuitBreakerRegistry() {
     CircuitBreakerRegistry circuitBreakerRegistry =
         CircuitBreakerRegistry.of(
-            this.circuitBreakerConfigMap.get(CircuitBreakerConfigParser.DEFAULT_CONFIG_KEY));
+            ResilienceCircuitBreakerConfigConverter.convertConfig(circuitBreakerThresholds));
     circuitBreakerRegistry
         .getEventPublisher()
         .onEntryAdded(

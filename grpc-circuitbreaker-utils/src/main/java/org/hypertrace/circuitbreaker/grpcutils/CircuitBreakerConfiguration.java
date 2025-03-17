@@ -11,6 +11,11 @@ import org.hypertrace.core.grpcutils.context.RequestContext;
 public class CircuitBreakerConfiguration<T> {
   Class<T> requestClass;
   BiFunction<RequestContext, T, String> keyFunction;
-  boolean enabled;
-  Map<String, CircuitBreakerThresholds> circuitBreakerThresholdsMap;
+  @Builder.Default boolean enabled = false;
+  // Default value be "global" if not override.
+  @Builder.Default String defaultCircuitBreakerKey = "global";
+  // Standard/default thresholds
+  CircuitBreakerThresholds defaultThresholds;
+  // Custom overrides for specific cases (less common)
+  @Builder.Default Map<String, CircuitBreakerThresholds> circuitBreakerThresholdsMap = Map.of();
 }

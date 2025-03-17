@@ -14,7 +14,6 @@ dependencies {
   implementation("org.slf4j:slf4j-api:1.7.36")
   implementation("io.github.resilience4j:resilience4j-circuitbreaker:1.7.1")
   implementation("com.typesafe:config:1.4.2")
-  implementation("com.google.inject:guice:7.0.0")
 
   annotationProcessor("org.projectlombok:lombok:1.18.24")
   compileOnly("org.projectlombok:lombok:1.18.24")

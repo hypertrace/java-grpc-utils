@@ -11,7 +11,7 @@ import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerThresholds;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class ResilienceCircuitBreakerConfigParserTest {
+public class ResilienceCircuitBreakerConfigConverterTest {
 
   @Test
   void shouldParseValidConfiguration() {
@@ -31,7 +31,7 @@ public class ResilienceCircuitBreakerConfigParserTest {
     configMap.put("testService", thresholds);
 
     Map<String, CircuitBreakerConfig> result =
-        ResilienceCircuitBreakerConfigParser.getCircuitBreakerConfigs(configMap);
+        ResilienceCircuitBreakerConfigConverter.getCircuitBreakerConfigs(configMap);
 
     Assertions.assertTrue(result.containsKey("testService"));
 
@@ -46,24 +46,9 @@ public class ResilienceCircuitBreakerConfigParserTest {
   }
 
   @Test
-  void shouldUseDefaultSlidingWindowTypeForInvalidType() {
-    CircuitBreakerThresholds thresholds =
-        CircuitBreakerThresholds.builder()
-            .failureRateThreshold(50.0f)
-            .slowCallRateThreshold(30.0f)
-            .slowCallDurationThreshold(Duration.ofSeconds(2))
-            .slidingWindowSize(100)
-            .waitDurationInOpenState(Duration.ofSeconds(60))
-            .permittedNumberOfCallsInHalfOpenState(5)
-            .minimumNumberOfCalls(20)
-            .build(); // Invalid type scenario
-    CircuitBreakerConfig config = ResilienceCircuitBreakerConfigParser.getConfig(thresholds);
-    assertEquals(CircuitBreakerConfig.SlidingWindowType.TIME_BASED, config.getSlidingWindowType());
-  }
-
-  @Test
   void shouldThrowExceptionWhenConfigurationIsNull() {
     assertThrows(
-        NullPointerException.class, () -> ResilienceCircuitBreakerConfigParser.getConfig(null));
+        NullPointerException.class,
+        () -> ResilienceCircuitBreakerConfigConverter.convertConfig(null));
   }
 }
