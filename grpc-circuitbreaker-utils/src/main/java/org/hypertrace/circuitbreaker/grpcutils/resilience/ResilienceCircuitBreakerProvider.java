@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /** Utility class to provide Resilience4j CircuitBreaker */
 @Slf4j
-public class ResilienceCircuitBreakerProvider {
+class ResilienceCircuitBreakerProvider {
 
   private final CircuitBreakerRegistry circuitBreakerRegistry;
   private final Map<String, CircuitBreakerConfig> circuitBreakerConfigMap;
@@ -27,11 +27,7 @@ public class ResilienceCircuitBreakerProvider {
     return circuitBreakerCache.computeIfAbsent(
         circuitBreakerKey,
         key -> {
-          CircuitBreaker circuitBreaker =
-              Optional.ofNullable(circuitBreakerConfigMap.get(circuitBreakerKey))
-                  .map(config -> circuitBreakerRegistry.circuitBreaker(circuitBreakerKey, config))
-                  .orElseGet(() -> circuitBreakerRegistry.circuitBreaker(circuitBreakerKey));
-
+          CircuitBreaker circuitBreaker = getCircuitBreakerFromConfigMap(circuitBreakerKey);
           circuitBreaker
               .getEventPublisher()
               .onStateTransition(
@@ -53,5 +49,11 @@ public class ResilienceCircuitBreakerProvider {
                           event.getCircuitBreakerName()));
           return circuitBreaker;
         });
+  }
+
+  private CircuitBreaker getCircuitBreakerFromConfigMap(String circuitBreakerKey) {
+    return Optional.ofNullable(circuitBreakerConfigMap.get(circuitBreakerKey))
+        .map(config -> circuitBreakerRegistry.circuitBreaker(circuitBreakerKey, config))
+        .orElseGet(() -> circuitBreakerRegistry.circuitBreaker(circuitBreakerKey));
   }
 }

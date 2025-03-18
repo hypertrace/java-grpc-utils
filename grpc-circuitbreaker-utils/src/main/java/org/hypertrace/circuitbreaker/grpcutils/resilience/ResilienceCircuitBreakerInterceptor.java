@@ -1,8 +1,6 @@
 package org.hypertrace.circuitbreaker.grpcutils.resilience;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -24,40 +22,17 @@ import org.hypertrace.core.grpcutils.context.RequestContext;
 @Slf4j
 public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerInterceptor {
 
-  private final CircuitBreakerRegistry resilicenceCircuitBreakerRegistry;
-  private final Map<String, CircuitBreakerConfig> resilienceCircuitBreakerConfigMap;
   private final ResilienceCircuitBreakerProvider resilienceCircuitBreakerProvider;
   private final CircuitBreakerConfiguration<?> circuitBreakerConfiguration;
   private final Clock clock;
 
-  public ResilienceCircuitBreakerInterceptor(
-      CircuitBreakerConfiguration<?> circuitBreakerConfiguration, Clock clock) {
-    this.circuitBreakerConfiguration = circuitBreakerConfiguration;
-    this.clock = clock;
-    this.resilienceCircuitBreakerConfigMap =
-        ResilienceCircuitBreakerConfigConverter.getCircuitBreakerConfigs(
-            circuitBreakerConfiguration.getCircuitBreakerThresholdsMap());
-    this.resilicenceCircuitBreakerRegistry =
-        new ResilienceCircuitBreakerRegistryProvider(
-                circuitBreakerConfiguration.getDefaultThresholds())
-            .getCircuitBreakerRegistry();
-    this.resilienceCircuitBreakerProvider =
-        new ResilienceCircuitBreakerProvider(
-            resilicenceCircuitBreakerRegistry, resilienceCircuitBreakerConfigMap);
-  }
-
-  public ResilienceCircuitBreakerInterceptor(
+  ResilienceCircuitBreakerInterceptor(
       CircuitBreakerConfiguration<?> circuitBreakerConfiguration,
       Clock clock,
-      CircuitBreakerRegistry resilicenceCircuitBreakerRegistry,
       ResilienceCircuitBreakerProvider resilienceCircuitBreakerProvider) {
     this.circuitBreakerConfiguration = circuitBreakerConfiguration;
-    this.resilienceCircuitBreakerConfigMap =
-        ResilienceCircuitBreakerConfigConverter.getCircuitBreakerConfigs(
-            circuitBreakerConfiguration.getCircuitBreakerThresholdsMap());
-    this.resilicenceCircuitBreakerRegistry = resilicenceCircuitBreakerRegistry;
-    this.resilienceCircuitBreakerProvider = resilienceCircuitBreakerProvider;
     this.clock = clock;
+    this.resilienceCircuitBreakerProvider = resilienceCircuitBreakerProvider;
   }
 
   @Override
@@ -100,7 +75,7 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
               circuitBreaker.getState() == CircuitBreaker.State.HALF_OPEN
                   ? "Circuit Breaker is HALF-OPEN and rejecting excess requests"
                   : "Circuit Breaker is OPEN and blocking requests";
-          throw Status.RESOURCE_EXHAUSTED.withDescription(rejectionReason).asRuntimeException();
+          throw config.getExceptionBuilder().apply(rejectionReason);
         }
         super.sendMessage(message);
       }

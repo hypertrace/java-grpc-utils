@@ -7,7 +7,7 @@ import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerThresholds;
 
 /** Utility class to provide Resilience4j CircuitBreakerRegistry */
 @Slf4j
-public class ResilienceCircuitBreakerRegistryProvider {
+class ResilienceCircuitBreakerRegistryProvider {
   private final CircuitBreakerThresholds circuitBreakerThresholds;
 
   public ResilienceCircuitBreakerRegistryProvider(
@@ -24,12 +24,12 @@ public class ResilienceCircuitBreakerRegistryProvider {
         .onEntryAdded(
             entryAddedEvent -> {
               CircuitBreaker addedCircuitBreaker = entryAddedEvent.getAddedEntry();
-              log.info("CircuitBreaker {} added", addedCircuitBreaker.getName());
+              log.debug("CircuitBreaker {} added", addedCircuitBreaker.getName());
             })
         .onEntryRemoved(
             entryRemovedEvent -> {
               CircuitBreaker removedCircuitBreaker = entryRemovedEvent.getRemovedEntry();
-              log.info("CircuitBreaker {} removed", removedCircuitBreaker.getName());
+              log.debug("CircuitBreaker {} removed", removedCircuitBreaker.getName());
             });
     return circuitBreakerRegistry;
   }

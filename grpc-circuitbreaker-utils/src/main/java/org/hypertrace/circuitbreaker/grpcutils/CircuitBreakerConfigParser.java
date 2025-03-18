@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CircuitBreakerConfigParser {
 
-  public static final String DEFAULT_CONFIG_KEY = "default";
   private static final Set<String> nonThresholdKeys =
       Set.of("enabled", "defaultCircuitBreakerKey", "defaultThresholds");
 
@@ -32,7 +31,6 @@ public class CircuitBreakerConfigParser {
       "permittedNumberOfCallsInHalfOpenState";
   private static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
   public static final String ENABLED = "enabled";
-  public static final String DEFAULT_CIRCUIT_BREAKER_KEY = "defaultCircuitBreakerKey";
   public static final String DEFAULT_THRESHOLDS = "defaultThresholds";
 
   public static <T> CircuitBreakerConfiguration.CircuitBreakerConfigurationBuilder<T> parseConfig(
@@ -41,10 +39,6 @@ public class CircuitBreakerConfigParser {
         CircuitBreakerConfiguration.builder();
     if (config.hasPath(ENABLED)) {
       builder.enabled(config.getBoolean(ENABLED));
-    }
-
-    if (config.hasPath(DEFAULT_CIRCUIT_BREAKER_KEY)) {
-      builder.defaultCircuitBreakerKey(config.getString(DEFAULT_CIRCUIT_BREAKER_KEY));
     }
 
     if (config.hasPath(DEFAULT_THRESHOLDS)) {
@@ -62,7 +56,7 @@ public class CircuitBreakerConfigParser {
                     key -> key, // Circuit breaker key
                     key -> buildCircuitBreakerThresholds(config.getConfig(key))));
     builder.circuitBreakerThresholdsMap(circuitBreakerThresholdsMap);
-    log.info("Loaded circuit breaker configs: {}", builder);
+    log.debug("Loaded circuit breaker configs: {}", builder);
     return builder;
   }
 

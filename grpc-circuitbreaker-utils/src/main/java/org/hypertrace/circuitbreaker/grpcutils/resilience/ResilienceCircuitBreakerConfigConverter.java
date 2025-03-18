@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerThresholds;
 
 /** Utility class to parse CircuitBreakerConfiguration to Resilience4j CircuitBreakerConfig */
-public class ResilienceCircuitBreakerConfigConverter {
+class ResilienceCircuitBreakerConfigConverter {
 
   public static Map<String, CircuitBreakerConfig> getCircuitBreakerConfigs(
       Map<String, CircuitBreakerThresholds> configurationMap) {
