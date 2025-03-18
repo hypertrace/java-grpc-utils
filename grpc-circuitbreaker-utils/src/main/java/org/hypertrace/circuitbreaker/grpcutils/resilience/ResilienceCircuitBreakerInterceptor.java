@@ -62,6 +62,13 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
       public void sendMessage(ReqT message) {
         CircuitBreakerConfiguration<ReqT> config =
             (CircuitBreakerConfiguration<ReqT>) circuitBreakerConfiguration;
+        // Type check for message class compatibility
+        if (config.getRequestClass() != null && !config.getRequestClass().isInstance(message)) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Message type mismatch: Expected %s but received %s",
+                  config.getRequestClass().getName(), message.getClass().getName()));
+        }
         if (config.getKeyFunction() == null) {
           log.debug("Circuit breaker will apply to all requests as keyFunction config is not set");
           circuitBreakerKey = config.getDefaultCircuitBreakerKey();
