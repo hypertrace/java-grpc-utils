@@ -8,21 +8,21 @@ import lombok.Value;
 @Builder
 public class CircuitBreakerThresholds {
   // Percentage of failures to trigger OPEN state
-  float failureRateThreshold;
+  @Builder.Default float failureRateThreshold = 50f;
   // Percentage of slow calls to trigger OPEN state
-  float slowCallRateThreshold;
+  @Builder.Default float slowCallRateThreshold = 50f;
   // Define what a "slow" call is
-  Duration slowCallDurationThreshold;
+  @Builder.Default Duration slowCallDurationThreshold = Duration.ofSeconds(2);
   // Number of calls to consider in the sliding window
-  SlidingWindowType slidingWindowType;
-  int slidingWindowSize;
+  @Builder.Default SlidingWindowType slidingWindowType = SlidingWindowType.TIME_BASED;
+  @Builder.Default int slidingWindowSize = 60;
   // Time before retrying after OPEN state
-  Duration waitDurationInOpenState;
+  @Builder.Default Duration waitDurationInOpenState = Duration.ofSeconds(60);
   // Minimum calls before evaluating failure rate
-  int minimumNumberOfCalls;
+  @Builder.Default int minimumNumberOfCalls = 10;
   // Calls allowed in HALF_OPEN state before deciding to
   // CLOSE or OPEN again
-  int permittedNumberOfCallsInHalfOpenState;
+  @Builder.Default int permittedNumberOfCallsInHalfOpenState = 5;
 
   public enum SlidingWindowType {
     COUNT_BASED,

@@ -1,7 +1,6 @@
 package org.hypertrace.circuitbreaker.grpcutils;
 
 import com.typesafe.config.Config;
-import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -9,9 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CircuitBreakerConfigParser {
-
-  private static final Set<String> nonThresholdKeys =
-      Set.of("enabled", "defaultCircuitBreakerKey", "defaultThresholds");
 
   // Percentage of failures to trigger OPEN state
   private static final String FAILURE_RATE_THRESHOLD = "failureRateThreshold";
@@ -32,6 +28,7 @@ public class CircuitBreakerConfigParser {
   private static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
   public static final String ENABLED = "enabled";
   public static final String DEFAULT_THRESHOLDS = "defaultThresholds";
+  private static final Set<String> NON_THRESHOLD_KEYS = Set.of(ENABLED, DEFAULT_THRESHOLDS);
 
   public static <T> CircuitBreakerConfiguration.CircuitBreakerConfigurationBuilder<T> parseConfig(
       Config config) {
@@ -50,7 +47,7 @@ public class CircuitBreakerConfigParser {
 
     Map<String, CircuitBreakerThresholds> circuitBreakerThresholdsMap =
         config.root().keySet().stream()
-            .filter(key -> !nonThresholdKeys.contains(key)) // Filter out non-threshold keys
+            .filter(key -> !NON_THRESHOLD_KEYS.contains(key)) // Filter out non-threshold keys
             .collect(
                 Collectors.toMap(
                     key -> key, // Circuit breaker key
@@ -61,30 +58,47 @@ public class CircuitBreakerConfigParser {
   }
 
   private static CircuitBreakerThresholds buildCircuitBreakerThresholds(Config config) {
-    return CircuitBreakerThresholds.builder()
-        .failureRateThreshold((float) config.getDouble(FAILURE_RATE_THRESHOLD))
-        .slowCallRateThreshold((float) config.getDouble(SLOW_CALL_RATE_THRESHOLD))
-        .slowCallDurationThreshold(config.getDuration(SLOW_CALL_DURATION_THRESHOLD))
-        .slidingWindowType(getSlidingWindowType(config.getString(SLIDING_WINDOW_TYPE)))
-        .slidingWindowSize(config.getInt(SLIDING_WINDOW_SIZE))
-        .waitDurationInOpenState(config.getDuration(WAIT_DURATION_IN_OPEN_STATE))
-        .permittedNumberOfCallsInHalfOpenState(
-            config.getInt(PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE))
-        .minimumNumberOfCalls(config.getInt(MINIMUM_NUMBER_OF_CALLS))
-        .build();
+    CircuitBreakerThresholds.CircuitBreakerThresholdsBuilder builder =
+        CircuitBreakerThresholds.builder();
+
+    if (config.hasPath(FAILURE_RATE_THRESHOLD)) {
+      builder.failureRateThreshold((float) config.getDouble(FAILURE_RATE_THRESHOLD));
+    }
+
+    if (config.hasPath(SLOW_CALL_RATE_THRESHOLD)) {
+      builder.slowCallRateThreshold((float) config.getDouble(SLOW_CALL_RATE_THRESHOLD));
+    }
+
+    if (config.hasPath(SLOW_CALL_DURATION_THRESHOLD)) {
+      builder.slowCallDurationThreshold(config.getDuration(SLOW_CALL_DURATION_THRESHOLD));
+    }
+
+    if (config.hasPath(SLIDING_WINDOW_TYPE)) {
+      builder.slidingWindowType(getSlidingWindowType(config.getString(SLIDING_WINDOW_TYPE)));
+    }
+
+    if (config.hasPath(SLIDING_WINDOW_SIZE)) {
+      builder.slidingWindowSize(config.getInt(SLIDING_WINDOW_SIZE));
+    }
+
+    if (config.hasPath(WAIT_DURATION_IN_OPEN_STATE)) {
+      builder.waitDurationInOpenState(config.getDuration(WAIT_DURATION_IN_OPEN_STATE));
+    }
+
+    if (config.hasPath(PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE)) {
+      builder.permittedNumberOfCallsInHalfOpenState(
+          config.getInt(PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE));
+    }
+
+    if (config.hasPath(MINIMUM_NUMBER_OF_CALLS)) {
+      builder.minimumNumberOfCalls(config.getInt(MINIMUM_NUMBER_OF_CALLS));
+    }
+
+    return builder.build();
   }
 
   public static CircuitBreakerThresholds buildCircuitBreakerDefaultThresholds() {
-    return CircuitBreakerThresholds.builder()
-        .failureRateThreshold(50f)
-        .slowCallRateThreshold(50f)
-        .slowCallDurationThreshold(Duration.ofSeconds(2))
-        .slidingWindowType(CircuitBreakerThresholds.SlidingWindowType.TIME_BASED)
-        .slidingWindowSize(60)
-        .waitDurationInOpenState(Duration.ofSeconds(60))
-        .permittedNumberOfCallsInHalfOpenState(5)
-        .minimumNumberOfCalls(10)
-        .build();
+    return CircuitBreakerThresholds.builder().build();
   }
 
   private static CircuitBreakerThresholds.SlidingWindowType getSlidingWindowType(
