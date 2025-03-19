@@ -23,6 +23,7 @@ public class CircuitBreakerThresholds {
   // Calls allowed in HALF_OPEN state before deciding to
   // CLOSE or OPEN again
   @Builder.Default int permittedNumberOfCallsInHalfOpenState = 5;
+  @Builder.Default boolean enabled = true;
 
   public enum SlidingWindowType {
     COUNT_BASED,

@@ -28,7 +28,7 @@ public class CircuitBreakerConfigParser {
   private static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
   public static final String ENABLED = "enabled";
   public static final String DEFAULT_THRESHOLDS = "defaultThresholds";
-  private static final Set<String> NON_THRESHOLD_KEYS = Set.of(ENABLED, DEFAULT_THRESHOLDS);
+  private static final Set<String> NON_THRESHOLD_KEYS = Set.of(ENABLED);
 
   public static <T> CircuitBreakerConfiguration.CircuitBreakerConfigurationBuilder<T> parseConfig(
       Config config) {
@@ -38,13 +38,6 @@ public class CircuitBreakerConfigParser {
       builder.enabled(config.getBoolean(ENABLED));
     }
 
-    if (config.hasPath(DEFAULT_THRESHOLDS)) {
-      builder.defaultThresholds(
-          buildCircuitBreakerThresholds(config.getConfig(DEFAULT_THRESHOLDS)));
-    } else {
-      builder.defaultThresholds(buildCircuitBreakerDefaultThresholds());
-    }
-
     Map<String, CircuitBreakerThresholds> circuitBreakerThresholdsMap =
         config.root().keySet().stream()
             .filter(key -> !NON_THRESHOLD_KEYS.contains(key)) // Filter out non-threshold keys
@@ -52,6 +45,12 @@ public class CircuitBreakerConfigParser {
                 Collectors.toMap(
                     key -> key, // Circuit breaker key
                     key -> buildCircuitBreakerThresholds(config.getConfig(key))));
+
+    if (!config.hasPath(DEFAULT_THRESHOLDS)) {
+      builder.defaultThresholds(buildCircuitBreakerDefaultThresholds());
+      circuitBreakerThresholdsMap.put(DEFAULT_THRESHOLDS, buildCircuitBreakerDefaultThresholds());
+    }
+
     builder.circuitBreakerThresholdsMap(circuitBreakerThresholdsMap);
     log.debug("Loaded circuit breaker configs: {}", builder);
     return builder;
@@ -92,6 +91,10 @@ public class CircuitBreakerConfigParser {
 
     if (config.hasPath(MINIMUM_NUMBER_OF_CALLS)) {
       builder.minimumNumberOfCalls(config.getInt(MINIMUM_NUMBER_OF_CALLS));
+    }
+
+    if (config.hasPath(ENABLED)) {
+      builder.enabled(config.getBoolean(ENABLED));
     }
 
     return builder.build();

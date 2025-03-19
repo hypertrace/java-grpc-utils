@@ -2,7 +2,6 @@ package org.hypertrace.circuitbreaker.grpcutils.resilience;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -11,6 +10,7 @@ import io.grpc.*;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfiguration;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,14 +40,11 @@ class ResilienceCircuitBreakerInterceptorTest {
 
     fixedClock = Clock.fixed(Instant.now(), ZoneOffset.UTC);
     when(mockChannel.newCall(any(), any())).thenReturn(mockClientCall);
-    when(mockCircuitBreakerProvider.getCircuitBreaker(anyString())).thenReturn(mockCircuitBreaker);
-    when(mockCircuitBreakerConfig.getDefaultCircuitBreakerKey()).thenReturn("global");
   }
 
   @Test
   void testSendMessage_CallsSuperSendMessage_Success() {
     doNothing().when(mockClientCall).sendMessage(any());
-    when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(true);
 
     ResilienceCircuitBreakerInterceptor interceptor =
         new ResilienceCircuitBreakerInterceptor(
@@ -67,6 +64,8 @@ class ResilienceCircuitBreakerInterceptorTest {
   void testSendMessage_CircuitBreakerRejectsRequest() {
     when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(false);
     when(mockCircuitBreaker.getState()).thenReturn(CircuitBreaker.State.OPEN);
+    when(mockCircuitBreakerProvider.getDefaultCircuitBreaker())
+        .thenReturn(Optional.of(mockCircuitBreaker));
     when(mockCircuitBreakerConfig.getExceptionBuilder())
         .thenReturn(
             reason ->
@@ -94,6 +93,8 @@ class ResilienceCircuitBreakerInterceptorTest {
   void testSendMessage_CircuitBreakerInHalfOpenState() {
     when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(false);
     when(mockCircuitBreaker.getState()).thenReturn(CircuitBreaker.State.HALF_OPEN);
+    when(mockCircuitBreakerProvider.getDefaultCircuitBreaker())
+        .thenReturn(Optional.of(mockCircuitBreaker));
     when(mockCircuitBreakerConfig.getExceptionBuilder())
         .thenReturn(
             reason ->
@@ -120,6 +121,8 @@ class ResilienceCircuitBreakerInterceptorTest {
   @Test
   void testWrapListenerWithCircuitBreaker_Success() {
     when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(true);
+    when(mockCircuitBreakerProvider.getDefaultCircuitBreaker())
+        .thenReturn(Optional.of(mockCircuitBreaker));
     ResilienceCircuitBreakerInterceptor interceptor =
         new ResilienceCircuitBreakerInterceptor(
             mockCircuitBreakerConfig, fixedClock, mockCircuitBreakerProvider);
@@ -144,6 +147,8 @@ class ResilienceCircuitBreakerInterceptorTest {
   @Test
   void testWrapListenerWithCircuitBreaker_Failure() {
     when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(true);
+    when(mockCircuitBreakerProvider.getDefaultCircuitBreaker())
+        .thenReturn(Optional.of(mockCircuitBreaker));
     ResilienceCircuitBreakerInterceptor interceptor =
         new ResilienceCircuitBreakerInterceptor(
             mockCircuitBreakerConfig, fixedClock, mockCircuitBreakerProvider);

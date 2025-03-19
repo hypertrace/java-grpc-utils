@@ -18,7 +18,9 @@ public class ResilienceCircuitBreakerFactory {
             .getCircuitBreakerRegistry();
     ResilienceCircuitBreakerProvider resilienceCircuitBreakerProvider =
         new ResilienceCircuitBreakerProvider(
-            resilicenceCircuitBreakerRegistry, resilienceCircuitBreakerConfigMap);
+            resilicenceCircuitBreakerRegistry,
+            resilienceCircuitBreakerConfigMap,
+            circuitBreakerConfiguration.getCircuitBreakerThresholdsMap());
     return new ResilienceCircuitBreakerInterceptor(
         circuitBreakerConfiguration, clock, resilienceCircuitBreakerProvider);
   }

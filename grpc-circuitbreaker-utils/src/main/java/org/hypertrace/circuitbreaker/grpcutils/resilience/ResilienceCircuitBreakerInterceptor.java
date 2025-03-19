@@ -13,6 +13,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfiguration;
@@ -45,7 +46,7 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
       MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
     return new ForwardingClientCall.SimpleForwardingClientCall<>(
         next.newCall(method, callOptions)) {
-      CircuitBreaker circuitBreaker;
+      Optional<CircuitBreaker> circuitBreaker;
       String circuitBreakerKey;
 
       @Override
@@ -67,17 +68,21 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
           super.sendMessage(message);
           return;
         }
-        if (config.getKeyFunction() == null) {
-          log.debug("Circuit breaker will apply to all requests as keyFunction config is not set");
-          circuitBreakerKey = config.getDefaultCircuitBreakerKey();
-        } else {
+        if (config.getKeyFunction() != null) {
           circuitBreakerKey = config.getKeyFunction().apply(RequestContext.CURRENT.get(), message);
+          circuitBreaker = resilienceCircuitBreakerProvider.getCircuitBreaker(circuitBreakerKey);
+        } else {
+          log.debug("Circuit breaker will apply to all requests as keyFunction config is not set");
+          circuitBreaker = resilienceCircuitBreakerProvider.getDefaultCircuitBreaker();
         }
-        circuitBreaker = resilienceCircuitBreakerProvider.getCircuitBreaker(circuitBreakerKey);
-        if (!circuitBreaker.tryAcquirePermission()) {
-          logCircuitBreakerRejection(circuitBreakerKey, circuitBreaker);
+        if (circuitBreaker.isEmpty()) {
+          super.sendMessage(message);
+          return;
+        }
+        if (!circuitBreaker.get().tryAcquirePermission()) {
+          logCircuitBreakerRejection(circuitBreakerKey, circuitBreaker.get());
           String rejectionReason =
-              circuitBreaker.getState() == CircuitBreaker.State.HALF_OPEN
+              circuitBreaker.get().getState() == CircuitBreaker.State.HALF_OPEN
                   ? "Circuit Breaker is HALF-OPEN and rejecting excess requests"
                   : "Circuit Breaker is OPEN and blocking requests";
           throw config.getExceptionBuilder().apply(rejectionReason);
@@ -89,18 +94,21 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
           wrapListenerWithCircuitBreaker(Listener<RespT> responseListener, Instant startTime) {
         return new ForwardingClientCallListener.SimpleForwardingClientCallListener<>(
             responseListener) {
+          @SuppressWarnings("OptionalGetWithoutIsPresent")
           @Override
           public void onClose(Status status, Metadata trailers) {
             long duration = Duration.between(startTime, clock.instant()).toNanos();
             if (status.isOk()) {
-              circuitBreaker.onSuccess(duration, TimeUnit.NANOSECONDS);
+              circuitBreaker.get().onSuccess(duration, TimeUnit.NANOSECONDS);
             } else {
               log.debug(
                   "Circuit Breaker '{}' detected failure. Status: {}, Description: {}",
-                  circuitBreaker.getName(),
+                  circuitBreaker.get().getName(),
                   status.getCode(),
                   status.getDescription());
-              circuitBreaker.onError(duration, TimeUnit.NANOSECONDS, status.asRuntimeException());
+              circuitBreaker
+                  .get()
+                  .onError(duration, TimeUnit.NANOSECONDS, status.asRuntimeException());
             }
             super.onClose(status, trailers);
           }
