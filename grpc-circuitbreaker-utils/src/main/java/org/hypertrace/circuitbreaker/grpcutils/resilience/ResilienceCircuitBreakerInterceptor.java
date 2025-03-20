@@ -47,7 +47,6 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
     return new ForwardingClientCall.SimpleForwardingClientCall<>(
         next.newCall(method, callOptions)) {
       Optional<CircuitBreaker> optionalCircuitBreaker;
-      String circuitBreakerKey;
 
       @Override
       public void start(Listener<RespT> responseListener, Metadata headers) {
@@ -68,14 +67,15 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
           super.sendMessage(message);
           return;
         }
+        String circuitBreakerKey = null;
         if (config.getKeyFunction() != null) {
           circuitBreakerKey = config.getKeyFunction().apply(RequestContext.CURRENT.get(), message);
-          optionalCircuitBreaker =
-              resilienceCircuitBreakerProvider.getCircuitBreaker(circuitBreakerKey);
-        } else {
-          log.debug("Circuit breaker will apply to all requests as keyFunction config is not set");
-          optionalCircuitBreaker = resilienceCircuitBreakerProvider.getDefaultCircuitBreaker();
         }
+        optionalCircuitBreaker =
+            circuitBreakerKey != null
+                ? resilienceCircuitBreakerProvider.getCircuitBreaker(circuitBreakerKey)
+                : resilienceCircuitBreakerProvider.getSharedCircuitBreaker();
+
         CircuitBreaker circuitBreaker = optionalCircuitBreaker.orElse(null);
         if (circuitBreaker == null) {
           super.sendMessage(message);

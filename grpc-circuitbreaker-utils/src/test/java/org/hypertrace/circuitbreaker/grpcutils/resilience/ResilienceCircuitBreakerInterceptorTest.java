@@ -64,7 +64,7 @@ class ResilienceCircuitBreakerInterceptorTest {
   void testSendMessage_CircuitBreakerRejectsRequest() {
     when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(false);
     when(mockCircuitBreaker.getState()).thenReturn(CircuitBreaker.State.OPEN);
-    when(mockCircuitBreakerProvider.getDefaultCircuitBreaker())
+    when(mockCircuitBreakerProvider.getSharedCircuitBreaker())
         .thenReturn(Optional.of(mockCircuitBreaker));
     when(mockCircuitBreakerConfig.getExceptionBuilder())
         .thenReturn(
@@ -93,7 +93,7 @@ class ResilienceCircuitBreakerInterceptorTest {
   void testSendMessage_CircuitBreakerInHalfOpenState() {
     when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(false);
     when(mockCircuitBreaker.getState()).thenReturn(CircuitBreaker.State.HALF_OPEN);
-    when(mockCircuitBreakerProvider.getDefaultCircuitBreaker())
+    when(mockCircuitBreakerProvider.getSharedCircuitBreaker())
         .thenReturn(Optional.of(mockCircuitBreaker));
     when(mockCircuitBreakerConfig.getExceptionBuilder())
         .thenReturn(
@@ -121,7 +121,7 @@ class ResilienceCircuitBreakerInterceptorTest {
   @Test
   void testWrapListenerWithCircuitBreaker_Success() {
     when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(true);
-    when(mockCircuitBreakerProvider.getDefaultCircuitBreaker())
+    when(mockCircuitBreakerProvider.getSharedCircuitBreaker())
         .thenReturn(Optional.of(mockCircuitBreaker));
     ResilienceCircuitBreakerInterceptor interceptor =
         new ResilienceCircuitBreakerInterceptor(
@@ -147,7 +147,7 @@ class ResilienceCircuitBreakerInterceptorTest {
   @Test
   void testWrapListenerWithCircuitBreaker_Failure() {
     when(mockCircuitBreaker.tryAcquirePermission()).thenReturn(true);
-    when(mockCircuitBreakerProvider.getDefaultCircuitBreaker())
+    when(mockCircuitBreakerProvider.getSharedCircuitBreaker())
         .thenReturn(Optional.of(mockCircuitBreaker));
     ResilienceCircuitBreakerInterceptor interceptor =
         new ResilienceCircuitBreakerInterceptor(
