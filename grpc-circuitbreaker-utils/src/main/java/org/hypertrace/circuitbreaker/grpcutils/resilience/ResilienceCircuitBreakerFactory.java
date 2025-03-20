@@ -12,15 +12,16 @@ public class ResilienceCircuitBreakerFactory {
     Map<String, CircuitBreakerConfig> resilienceCircuitBreakerConfigMap =
         ResilienceCircuitBreakerConfigConverter.getCircuitBreakerConfigs(
             circuitBreakerConfiguration.getCircuitBreakerThresholdsMap());
-    CircuitBreakerRegistry resilicenceCircuitBreakerRegistry =
+    CircuitBreakerRegistry resilienceCircuitBreakerRegistry =
         new ResilienceCircuitBreakerRegistryProvider(
                 circuitBreakerConfiguration.getDefaultThresholds())
             .getCircuitBreakerRegistry();
     ResilienceCircuitBreakerProvider resilienceCircuitBreakerProvider =
         new ResilienceCircuitBreakerProvider(
-            resilicenceCircuitBreakerRegistry,
+            resilienceCircuitBreakerRegistry,
             resilienceCircuitBreakerConfigMap,
-            circuitBreakerConfiguration.getCircuitBreakerThresholdsMap());
+            ResilienceCircuitBreakerConfigConverter.getDisabledKeys(
+                circuitBreakerConfiguration.getCircuitBreakerThresholdsMap()));
     return new ResilienceCircuitBreakerInterceptor(
         circuitBreakerConfiguration, clock, resilienceCircuitBreakerProvider);
   }

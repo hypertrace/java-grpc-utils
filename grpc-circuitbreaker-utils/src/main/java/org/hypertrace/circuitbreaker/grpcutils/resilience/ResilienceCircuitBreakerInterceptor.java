@@ -46,7 +46,7 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
       MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
     return new ForwardingClientCall.SimpleForwardingClientCall<>(
         next.newCall(method, callOptions)) {
-      Optional<CircuitBreaker> circuitBreaker;
+      Optional<CircuitBreaker> optionalCircuitBreaker;
       String circuitBreakerKey;
 
       @Override
@@ -70,19 +70,21 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
         }
         if (config.getKeyFunction() != null) {
           circuitBreakerKey = config.getKeyFunction().apply(RequestContext.CURRENT.get(), message);
-          circuitBreaker = resilienceCircuitBreakerProvider.getCircuitBreaker(circuitBreakerKey);
+          optionalCircuitBreaker =
+              resilienceCircuitBreakerProvider.getCircuitBreaker(circuitBreakerKey);
         } else {
           log.debug("Circuit breaker will apply to all requests as keyFunction config is not set");
-          circuitBreaker = resilienceCircuitBreakerProvider.getDefaultCircuitBreaker();
+          optionalCircuitBreaker = resilienceCircuitBreakerProvider.getDefaultCircuitBreaker();
         }
-        if (circuitBreaker.isEmpty()) {
+        CircuitBreaker circuitBreaker = optionalCircuitBreaker.orElse(null);
+        if (circuitBreaker == null) {
           super.sendMessage(message);
           return;
         }
-        if (!circuitBreaker.get().tryAcquirePermission()) {
-          logCircuitBreakerRejection(circuitBreakerKey, circuitBreaker.get());
+        if (!circuitBreaker.tryAcquirePermission()) {
+          logCircuitBreakerRejection(circuitBreakerKey, circuitBreaker);
           String rejectionReason =
-              circuitBreaker.get().getState() == CircuitBreaker.State.HALF_OPEN
+              circuitBreaker.getState() == CircuitBreaker.State.HALF_OPEN
                   ? "Circuit Breaker is HALF-OPEN and rejecting excess requests"
                   : "Circuit Breaker is OPEN and blocking requests";
           throw config.getExceptionBuilder().apply(rejectionReason);
@@ -94,21 +96,23 @@ public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerIntercept
           wrapListenerWithCircuitBreaker(Listener<RespT> responseListener, Instant startTime) {
         return new ForwardingClientCallListener.SimpleForwardingClientCallListener<>(
             responseListener) {
-          @SuppressWarnings("OptionalGetWithoutIsPresent")
           @Override
           public void onClose(Status status, Metadata trailers) {
             long duration = Duration.between(startTime, clock.instant()).toNanos();
+            CircuitBreaker circuitBreaker = optionalCircuitBreaker.orElse(null);
+            if (circuitBreaker == null) {
+              super.onClose(status, trailers);
+              return;
+            }
             if (status.isOk()) {
-              circuitBreaker.get().onSuccess(duration, TimeUnit.NANOSECONDS);
+              circuitBreaker.onSuccess(duration, TimeUnit.NANOSECONDS);
             } else {
               log.debug(
                   "Circuit Breaker '{}' detected failure. Status: {}, Description: {}",
-                  circuitBreaker.get().getName(),
+                  circuitBreaker.getName(),
                   status.getCode(),
                   status.getDescription());
-              circuitBreaker
-                  .get()
-                  .onError(duration, TimeUnit.NANOSECONDS, status.asRuntimeException());
+              circuitBreaker.onError(duration, TimeUnit.NANOSECONDS, status.asRuntimeException());
             }
             super.onClose(status, trailers);
           }

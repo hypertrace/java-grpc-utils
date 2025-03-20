@@ -28,7 +28,7 @@ public class CircuitBreakerConfigParser {
   private static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
   public static final String ENABLED = "enabled";
   public static final String DEFAULT_THRESHOLDS = "defaultThresholds";
-  private static final Set<String> NON_THRESHOLD_KEYS = Set.of(ENABLED);
+  private static final Set<String> NON_THRESHOLD_KEYS = Set.of(ENABLED, DEFAULT_THRESHOLDS);
 
   public static <T> CircuitBreakerConfiguration.CircuitBreakerConfigurationBuilder<T> parseConfig(
       Config config) {
@@ -46,10 +46,10 @@ public class CircuitBreakerConfigParser {
                     key -> key, // Circuit breaker key
                     key -> buildCircuitBreakerThresholds(config.getConfig(key))));
 
-    if (!config.hasPath(DEFAULT_THRESHOLDS)) {
-      builder.defaultThresholds(buildCircuitBreakerDefaultThresholds());
-      circuitBreakerThresholdsMap.put(DEFAULT_THRESHOLDS, buildCircuitBreakerDefaultThresholds());
-    }
+    builder.defaultThresholds(
+        config.hasPath(DEFAULT_THRESHOLDS)
+            ? buildCircuitBreakerThresholds(config.getConfig(DEFAULT_THRESHOLDS))
+            : buildCircuitBreakerDefaultThresholds());
 
     builder.circuitBreakerThresholdsMap(circuitBreakerThresholdsMap);
     log.debug("Loaded circuit breaker configs: {}", builder);

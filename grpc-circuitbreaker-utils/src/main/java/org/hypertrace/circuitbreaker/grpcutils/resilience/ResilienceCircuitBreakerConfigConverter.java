@@ -1,6 +1,7 @@
 package org.hypertrace.circuitbreaker.grpcutils.resilience;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerThresholds;
@@ -12,6 +13,14 @@ class ResilienceCircuitBreakerConfigConverter {
       Map<String, CircuitBreakerThresholds> configurationMap) {
     return configurationMap.entrySet().stream()
         .collect(Collectors.toMap(Map.Entry::getKey, entry -> convertConfig(entry.getValue())));
+  }
+
+  public static List<String> getDisabledKeys(
+      Map<String, CircuitBreakerThresholds> configurationMap) {
+    return configurationMap.entrySet().stream()
+        .filter(entry -> entry.getValue().isEnabled())
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toList());
   }
 
   static CircuitBreakerConfig convertConfig(CircuitBreakerThresholds configuration) {

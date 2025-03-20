@@ -3,12 +3,12 @@ package org.hypertrace.circuitbreaker.grpcutils.resilience;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfigParser;
-import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerThresholds;
 
 /** Utility class to provide Resilience4j CircuitBreaker */
 @Slf4j
@@ -16,21 +16,20 @@ class ResilienceCircuitBreakerProvider {
 
   private final CircuitBreakerRegistry circuitBreakerRegistry;
   private final Map<String, CircuitBreakerConfig> circuitBreakerConfigMap;
-  private final Map<String, CircuitBreakerThresholds> circuitBreakerThresholdsMap;
   private final Map<String, CircuitBreaker> circuitBreakerCache = new ConcurrentHashMap<>();
+  private final List<String> disabledKeys;
 
   public ResilienceCircuitBreakerProvider(
       CircuitBreakerRegistry circuitBreakerRegistry,
       Map<String, CircuitBreakerConfig> circuitBreakerConfigMap,
-      Map<String, CircuitBreakerThresholds> circuitBreakerThresholdsMap) {
+      List<String> disabledKeys) {
     this.circuitBreakerRegistry = circuitBreakerRegistry;
     this.circuitBreakerConfigMap = circuitBreakerConfigMap;
-    this.circuitBreakerThresholdsMap = circuitBreakerThresholdsMap;
+    this.disabledKeys = disabledKeys;
   }
 
   public Optional<CircuitBreaker> getCircuitBreaker(String circuitBreakerKey) {
-    if (circuitBreakerThresholdsMap.containsKey(circuitBreakerKey)
-        && !circuitBreakerThresholdsMap.get(circuitBreakerKey).isEnabled()) {
+    if (disabledKeys.contains(circuitBreakerKey)) {
       return Optional.empty();
     }
     return Optional.of(
