@@ -29,7 +29,8 @@ class ResilienceCircuitBreakerProvider {
   }
 
   public Optional<CircuitBreaker> getCircuitBreaker(String circuitBreakerKey) {
-    if (disabledKeys.contains(circuitBreakerKey)) {
+    if (disabledKeys.contains(circuitBreakerKey)
+        || !circuitBreakerConfigMap.containsKey(circuitBreakerKey)) {
       return Optional.empty();
     }
     return Optional.of(
