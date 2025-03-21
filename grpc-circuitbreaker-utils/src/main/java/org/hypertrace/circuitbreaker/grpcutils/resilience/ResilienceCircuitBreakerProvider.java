@@ -1,14 +1,16 @@
 package org.hypertrace.circuitbreaker.grpcutils.resilience;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfigParser;
 
 /** Utility class to provide Resilience4j CircuitBreaker */
 @Slf4j
@@ -17,51 +19,42 @@ class ResilienceCircuitBreakerProvider {
   private static final String SHARED_KEY = "SHARED_KEY";
   private final CircuitBreakerRegistry circuitBreakerRegistry;
   private final Map<String, CircuitBreakerConfig> circuitBreakerConfigMap;
-  private final Map<String, CircuitBreaker> circuitBreakerCache = new ConcurrentHashMap<>();
   private final List<String> disabledKeys;
   private final boolean defaultEnabled;
+
+  // LoadingCache to manage CircuitBreaker instances with automatic loading and eviction
+  private final LoadingCache<String, Optional<CircuitBreaker>> circuitBreakerCache =
+      CacheBuilder.newBuilder()
+          .expireAfterAccess(60, TimeUnit.MINUTES) // Auto-evict after 60 minutes
+          .maximumSize(10000) // Limit max cache size
+          .build(
+              new CacheLoader<>() {
+                @Override
+                public Optional<CircuitBreaker> load(String key) {
+                  return buildNewCircuitBreaker(key);
+                }
+              });
 
   public ResilienceCircuitBreakerProvider(
       CircuitBreakerRegistry circuitBreakerRegistry,
       Map<String, CircuitBreakerConfig> circuitBreakerConfigMap,
-      List<String> disabledKeys) {
+      List<String> disabledKeys,
+      boolean defaultEnabled) {
     this.circuitBreakerRegistry = circuitBreakerRegistry;
     this.circuitBreakerConfigMap = circuitBreakerConfigMap;
     this.disabledKeys = disabledKeys;
-    this.defaultEnabled = !disabledKeys.contains(CircuitBreakerConfigParser.DEFAULT_THRESHOLDS);
+    this.defaultEnabled = defaultEnabled;
   }
 
   public Optional<CircuitBreaker> getCircuitBreaker(String circuitBreakerKey) {
     if (disabledKeys.contains(circuitBreakerKey)) {
       return Optional.empty();
     }
-    return Optional.ofNullable(
-        circuitBreakerCache.computeIfAbsent(
-            circuitBreakerKey,
-            key -> {
-              CircuitBreaker circuitBreaker =
-                  getCircuitBreakerFromConfigMap(circuitBreakerKey, defaultEnabled);
-              // If no circuit breaker is created return empty
-              if (circuitBreaker == null) {
-                return null; // Ensures cache does not store null entries
-              }
-              attachListeners(circuitBreaker);
-              return circuitBreaker;
-            }));
+    return circuitBreakerCache.getUnchecked(circuitBreakerKey);
   }
 
   public Optional<CircuitBreaker> getSharedCircuitBreaker() {
-    if (!defaultEnabled) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        circuitBreakerCache.computeIfAbsent(
-            SHARED_KEY,
-            key -> {
-              CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(SHARED_KEY);
-              attachListeners(circuitBreaker);
-              return circuitBreaker;
-            }));
+    return defaultEnabled ? getCircuitBreaker(SHARED_KEY) : Optional.empty();
   }
 
   private static void attachListeners(CircuitBreaker circuitBreaker) {
@@ -86,14 +79,26 @@ class ResilienceCircuitBreakerProvider {
                     event.getCircuitBreakerName()));
   }
 
-  private CircuitBreaker getCircuitBreakerFromConfigMap(
-      String circuitBreakerKey, boolean defaultEnabled) {
+  private Optional<CircuitBreaker> buildNewCircuitBreaker(String circuitBreakerKey) {
     return Optional.ofNullable(circuitBreakerConfigMap.get(circuitBreakerKey))
-        .map(config -> circuitBreakerRegistry.circuitBreaker(circuitBreakerKey, config))
-        .orElseGet(
-            () ->
-                defaultEnabled
-                    ? circuitBreakerRegistry.circuitBreaker(circuitBreakerKey)
-                    : null); // Return null if default is disabled
+        .map(
+            config -> {
+              CircuitBreaker circuitBreaker =
+                  circuitBreakerRegistry.circuitBreaker(circuitBreakerKey, config);
+              attachListeners(circuitBreaker); // Attach listeners here
+              return circuitBreaker;
+            })
+        .or(
+            () -> {
+              if (defaultEnabled) {
+                CircuitBreaker circuitBreaker =
+                    circuitBreakerRegistry.circuitBreaker(circuitBreakerKey);
+                attachListeners(
+                    circuitBreaker); // Attach listeners here for default circuit breaker
+                return Optional.of(circuitBreaker);
+              } else {
+                return Optional.empty();
+              }
+            });
   }
 }

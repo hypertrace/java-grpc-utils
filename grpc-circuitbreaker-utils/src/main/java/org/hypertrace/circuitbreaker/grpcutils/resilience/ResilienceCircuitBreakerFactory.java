@@ -21,7 +21,8 @@ public class ResilienceCircuitBreakerFactory {
             resilienceCircuitBreakerRegistry,
             resilienceCircuitBreakerConfigMap,
             ResilienceCircuitBreakerConfigConverter.getDisabledKeys(
-                circuitBreakerConfiguration.getCircuitBreakerThresholdsMap()));
+                circuitBreakerConfiguration.getCircuitBreakerThresholdsMap()),
+            circuitBreakerConfiguration.getDefaultThresholds().isEnabled());
     return new ResilienceCircuitBreakerInterceptor(
         circuitBreakerConfiguration, clock, resilienceCircuitBreakerProvider);
   }

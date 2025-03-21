@@ -28,7 +28,7 @@ public class CircuitBreakerConfigParser {
   private static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
   public static final String ENABLED = "enabled";
   public static final String DEFAULT_THRESHOLDS = "defaultThresholds";
-  private static final Set<String> NON_THRESHOLD_KEYS = Set.of(ENABLED);
+  private static final Set<String> NON_THRESHOLD_KEYS = Set.of(ENABLED, DEFAULT_THRESHOLDS);
 
   public static <T> CircuitBreakerConfiguration.CircuitBreakerConfigurationBuilder<T> parseConfig(
       Config config) {
