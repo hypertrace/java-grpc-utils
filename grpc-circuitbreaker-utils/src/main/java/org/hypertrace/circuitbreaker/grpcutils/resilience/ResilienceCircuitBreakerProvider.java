@@ -27,13 +27,7 @@ class ResilienceCircuitBreakerProvider {
       CacheBuilder.newBuilder()
           .expireAfterAccess(60, TimeUnit.MINUTES) // Auto-evict after 60 minutes
           .maximumSize(10000) // Limit max cache size
-          .build(
-              new CacheLoader<>() {
-                @Override
-                public Optional<CircuitBreaker> load(String key) {
-                  return buildNewCircuitBreaker(key);
-                }
-              });
+          .build(CacheLoader.from(this::buildNewCircuitBreaker));
 
   public ResilienceCircuitBreakerProvider(
       CircuitBreakerRegistry circuitBreakerRegistry,
@@ -81,24 +75,16 @@ class ResilienceCircuitBreakerProvider {
 
   private Optional<CircuitBreaker> buildNewCircuitBreaker(String circuitBreakerKey) {
     return Optional.ofNullable(circuitBreakerConfigMap.get(circuitBreakerKey))
-        .map(
-            config -> {
-              CircuitBreaker circuitBreaker =
-                  circuitBreakerRegistry.circuitBreaker(circuitBreakerKey, config);
-              attachListeners(circuitBreaker); // Attach listeners here
-              return circuitBreaker;
-            })
+        .map(config -> circuitBreakerRegistry.circuitBreaker(circuitBreakerKey, config))
         .or(
-            () -> {
-              if (defaultEnabled) {
-                CircuitBreaker circuitBreaker =
-                    circuitBreakerRegistry.circuitBreaker(circuitBreakerKey);
-                attachListeners(
-                    circuitBreaker); // Attach listeners here for default circuit breaker
-                return Optional.of(circuitBreaker);
-              } else {
-                return Optional.empty();
-              }
+            () ->
+                defaultEnabled
+                    ? Optional.of(circuitBreakerRegistry.circuitBreaker(circuitBreakerKey))
+                    : Optional.empty())
+        .map(
+            circuitBreaker -> {
+              attachListeners(circuitBreaker);
+              return circuitBreaker;
             });
   }
 }
