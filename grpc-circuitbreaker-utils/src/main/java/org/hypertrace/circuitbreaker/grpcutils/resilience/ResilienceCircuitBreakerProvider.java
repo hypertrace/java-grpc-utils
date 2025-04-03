@@ -8,6 +8,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ class ResilienceCircuitBreakerProvider {
   private final Map<String, CircuitBreakerConfig> circuitBreakerConfigMap;
   private final List<String> disabledKeys;
   private final boolean defaultEnabled;
+  private final String configKey;
 
   // LoadingCache to manage CircuitBreaker instances with automatic loading and eviction
   private final LoadingCache<String, Optional<CircuitBreaker>> circuitBreakerCache =
@@ -33,17 +35,23 @@ class ResilienceCircuitBreakerProvider {
       CircuitBreakerRegistry circuitBreakerRegistry,
       Map<String, CircuitBreakerConfig> circuitBreakerConfigMap,
       List<String> disabledKeys,
-      boolean defaultEnabled) {
+      boolean defaultEnabled,
+      String configKey) {
     this.circuitBreakerRegistry = circuitBreakerRegistry;
     this.circuitBreakerConfigMap = circuitBreakerConfigMap;
     this.disabledKeys = disabledKeys;
     this.defaultEnabled = defaultEnabled;
+    this.configKey = configKey;
   }
 
   public Optional<CircuitBreaker> getCircuitBreaker(String circuitBreakerKey) {
-    if (disabledKeys.contains(circuitBreakerKey)) {
+    if (disabledKeys.contains(circuitBreakerKey)
+        || (Objects.nonNull(configKey)
+            && !circuitBreakerConfigMap.containsKey(circuitBreakerKey)
+            && disabledKeys.contains(configKey))) {
       return Optional.empty();
     }
+
     return circuitBreakerCache.getUnchecked(circuitBreakerKey);
   }
 
@@ -75,6 +83,7 @@ class ResilienceCircuitBreakerProvider {
 
   private Optional<CircuitBreaker> buildNewCircuitBreaker(String circuitBreakerKey) {
     return Optional.ofNullable(circuitBreakerConfigMap.get(circuitBreakerKey))
+        .or(() -> Optional.ofNullable(configKey).map(circuitBreakerConfigMap::get))
         .map(config -> circuitBreakerRegistry.circuitBreaker(circuitBreakerKey, config))
         .or(
             () ->

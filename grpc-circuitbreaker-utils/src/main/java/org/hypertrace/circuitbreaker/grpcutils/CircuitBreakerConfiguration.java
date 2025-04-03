@@ -24,4 +24,7 @@ public class CircuitBreakerConfiguration<T> {
   @Builder.Default
   Function<String, StatusRuntimeException> exceptionBuilder =
       reason -> Status.RESOURCE_EXHAUSTED.withDescription(reason).asRuntimeException();
+
+  // config key to access non default circuit breaker thresholds
+  String configKey;
 }
