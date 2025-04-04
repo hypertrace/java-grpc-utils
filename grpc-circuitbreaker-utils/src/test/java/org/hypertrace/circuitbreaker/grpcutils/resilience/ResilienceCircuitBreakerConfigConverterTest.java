@@ -2,10 +2,12 @@ package org.hypertrace.circuitbreaker.grpcutils.resilience;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerThresholds;
 import org.junit.jupiter.api.Assertions;
@@ -50,5 +52,45 @@ public class ResilienceCircuitBreakerConfigConverterTest {
     assertThrows(
         NullPointerException.class,
         () -> ResilienceCircuitBreakerConfigConverter.convertConfig(null));
+  }
+
+  @Test
+  void shouldGetDisabledKeys() {
+    // Create a mix of enabled and disabled configurations
+    CircuitBreakerThresholds enabledThresholds =
+        CircuitBreakerThresholds.builder()
+            .enabled(true)
+            .failureRateThreshold(50.0f)
+            .build();
+
+    CircuitBreakerThresholds disabledThresholds1 =
+        CircuitBreakerThresholds.builder()
+            .enabled(false)
+            .failureRateThreshold(50.0f)
+            .build();
+
+    CircuitBreakerThresholds disabledThresholds2 =
+        CircuitBreakerThresholds.builder()
+            .enabled(false)
+            .failureRateThreshold(60.0f)
+            .build();
+
+    Map<String, CircuitBreakerThresholds> configMap = new HashMap<>();
+    configMap.put("enabledService", enabledThresholds);
+    configMap.put("disabledService1", disabledThresholds1);
+    configMap.put("disabledService2", disabledThresholds2);
+
+    List<String> disabledKeys = ResilienceCircuitBreakerConfigConverter.getDisabledKeys(configMap);
+
+    assertEquals(2, disabledKeys.size());
+    assertTrue(disabledKeys.contains("disabledService1"));
+    assertTrue(disabledKeys.contains("disabledService2"));
+  }
+
+  @Test
+  void shouldGetEmptyDisabledKeysForEmptyConfig() {
+    Map<String, CircuitBreakerThresholds> configMap = new HashMap<>();
+    List<String> disabledKeys = ResilienceCircuitBreakerConfigConverter.getDisabledKeys(configMap);
+    assertTrue(disabledKeys.isEmpty());
   }
 }
