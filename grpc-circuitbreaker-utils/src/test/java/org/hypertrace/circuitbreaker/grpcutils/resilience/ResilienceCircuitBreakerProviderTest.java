@@ -128,4 +128,49 @@ class ResilienceCircuitBreakerProviderTest {
     verify(circuitBreakerRegistry, times(1))
         .circuitBreaker(eq(ENABLED_SERVICE), eq(serviceConfig));
   }
+
+  @Test
+  void shouldHandleAllBuildNewCircuitBreakerScenarios() {
+    // Case 1: Service with specific config against circuit breaker key
+    Optional<CircuitBreaker> serviceSpecificResult = provider.getCircuitBreaker(ENABLED_SERVICE);
+    assertTrue(serviceSpecificResult.isPresent());
+    assertEquals(mockCircuitBreaker, serviceSpecificResult.get());
+    verify(circuitBreakerRegistry).circuitBreaker(ENABLED_SERVICE, serviceConfig);
+
+    // Case 2: Service without specific config against circuit breaker key but with config present against config key
+    String fallbackService = "fallbackService";
+    lenient().when(circuitBreakerRegistry.circuitBreaker(eq(fallbackService), eq(defaultConfig)))
+        .thenReturn(mockCircuitBreaker);
+    Optional<CircuitBreaker> fallbackResult = provider.getCircuitBreaker(fallbackService);
+    assertTrue(fallbackResult.isPresent());
+    assertEquals(mockCircuitBreaker, fallbackResult.get());
+    verify(circuitBreakerRegistry).circuitBreaker(fallbackService, defaultConfig);
+
+    // Case 3: Service with no config present against circuit breaker key and no config key, but defaultEnabled=true
+    String noConfigService = "noConfigService";
+    ResilienceCircuitBreakerProvider defaultEnabledProvider = new ResilienceCircuitBreakerProvider(
+        circuitBreakerRegistry,
+        configMap,
+        disabledKeys,
+        true, // defaultEnabled = true
+        null); // no config key
+
+    lenient().when(circuitBreakerRegistry.circuitBreaker(eq(noConfigService)))
+        .thenReturn(mockCircuitBreaker);
+    Optional<CircuitBreaker> noConfigResult = defaultEnabledProvider.getCircuitBreaker(noConfigService);
+    assertTrue(noConfigResult.isPresent());
+    assertEquals(mockCircuitBreaker, noConfigResult.get());
+    verify(circuitBreakerRegistry).circuitBreaker(noConfigService);
+
+    // Case 4: Service with no config present against circuit breaker key and no config key, and defaultEnabled=false
+    ResilienceCircuitBreakerProvider disabledDefaultProvider = new ResilienceCircuitBreakerProvider(
+        circuitBreakerRegistry,
+        configMap,
+        disabledKeys,
+        false, // defaultEnabled = false
+        null); // no config key
+
+    Optional<CircuitBreaker> disabledDefaultResult = disabledDefaultProvider.getCircuitBreaker(noConfigService);
+    assertFalse(disabledDefaultResult.isPresent());
+  }
 }
