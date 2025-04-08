@@ -5,9 +5,10 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import java.time.Clock;
 import java.util.Map;
 import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfiguration;
+import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerInterceptor;
 
 public class ResilienceCircuitBreakerFactory {
-  public static ResilienceCircuitBreakerInterceptor getResilienceCircuitBreakerInterceptor(
+  public static CircuitBreakerInterceptor getCircuitBreakerInterceptor(
       CircuitBreakerConfiguration<?> circuitBreakerConfiguration, Clock clock) {
     Map<String, CircuitBreakerConfig> resilienceCircuitBreakerConfigMap =
         ResilienceCircuitBreakerConfigConverter.getCircuitBreakerConfigs(

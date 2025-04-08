@@ -15,6 +15,7 @@ dependencies {
   implementation("io.github.resilience4j:resilience4j-circuitbreaker:1.7.1")
   implementation("com.typesafe:config:1.4.2")
   implementation("com.google.guava:guava:32.0.1-jre")
+  implementation("jakarta.inject:jakarta.inject-api:2.0.1")
 
   annotationProcessor("org.projectlombok:lombok:1.18.24")
   compileOnly("org.projectlombok:lombok:1.18.24")

@@ -21,7 +21,7 @@ import org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerInterceptor;
 import org.hypertrace.core.grpcutils.context.RequestContext;
 
 @Slf4j
-public class ResilienceCircuitBreakerInterceptor extends CircuitBreakerInterceptor {
+class ResilienceCircuitBreakerInterceptor extends CircuitBreakerInterceptor {
 
   private final ResilienceCircuitBreakerProvider resilienceCircuitBreakerProvider;
   private final CircuitBreakerConfiguration<?> circuitBreakerConfiguration;
