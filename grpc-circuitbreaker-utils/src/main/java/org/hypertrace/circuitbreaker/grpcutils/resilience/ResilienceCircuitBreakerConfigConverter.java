@@ -18,7 +18,7 @@ class ResilienceCircuitBreakerConfigConverter {
   public static List<String> getDisabledKeys(
       Map<String, CircuitBreakerThresholds> configurationMap) {
     return configurationMap.entrySet().stream()
-        .filter(entry -> entry.getValue().isEnabled())
+        .filter(entry -> !entry.getValue().isEnabled())
         .map(Map.Entry::getKey)
         .collect(Collectors.toList());
   }
