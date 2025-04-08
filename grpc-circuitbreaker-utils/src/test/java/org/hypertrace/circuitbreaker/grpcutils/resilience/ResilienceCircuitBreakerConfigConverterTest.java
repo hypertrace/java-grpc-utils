@@ -58,22 +58,13 @@ public class ResilienceCircuitBreakerConfigConverterTest {
   void shouldGetDisabledKeys() {
     // Create a mix of enabled and disabled configurations
     CircuitBreakerThresholds enabledThresholds =
-        CircuitBreakerThresholds.builder()
-            .enabled(true)
-            .failureRateThreshold(50.0f)
-            .build();
+        CircuitBreakerThresholds.builder().enabled(true).failureRateThreshold(50.0f).build();
 
     CircuitBreakerThresholds disabledThresholds1 =
-        CircuitBreakerThresholds.builder()
-            .enabled(false)
-            .failureRateThreshold(50.0f)
-            .build();
+        CircuitBreakerThresholds.builder().enabled(false).failureRateThreshold(50.0f).build();
 
     CircuitBreakerThresholds disabledThresholds2 =
-        CircuitBreakerThresholds.builder()
-            .enabled(false)
-            .failureRateThreshold(60.0f)
-            .build();
+        CircuitBreakerThresholds.builder().enabled(false).failureRateThreshold(60.0f).build();
 
     Map<String, CircuitBreakerThresholds> configMap = new HashMap<>();
     configMap.put("enabledService", enabledThresholds);

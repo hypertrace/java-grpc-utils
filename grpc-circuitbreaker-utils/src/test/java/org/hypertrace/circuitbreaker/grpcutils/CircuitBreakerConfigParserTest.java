@@ -17,21 +17,21 @@ class CircuitBreakerConfigParserTest {
   @Test
   void testParseConfig() {
     String configStr =
-        "enabled = true\n" +
-            "defaultThresholds {\n" +
-            "  failureRateThreshold = 50.0\n" +
-            "  slowCallRateThreshold = 30.0\n" +
-            "  slowCallDurationThreshold = 1s\n" +
-            "  slidingWindowSize = 100\n" +
-            "  slidingWindowType = COUNT_BASED\n" +
-            "}\n" +
-            "service1 {\n" +
-            "  failureRateThreshold = 60.0\n" +
-            "  slowCallRateThreshold = 40.0\n" +
-            "  slowCallDurationThreshold = 2s\n" +
-            "  slidingWindowSize = 200\n" +
-            "  slidingWindowType = TIME_BASED\n" +
-            "}";
+        "enabled = true\n"
+            + "defaultThresholds {\n"
+            + "  failureRateThreshold = 50.0\n"
+            + "  slowCallRateThreshold = 30.0\n"
+            + "  slowCallDurationThreshold = 1s\n"
+            + "  slidingWindowSize = 100\n"
+            + "  slidingWindowType = COUNT_BASED\n"
+            + "}\n"
+            + "service1 {\n"
+            + "  failureRateThreshold = 60.0\n"
+            + "  slowCallRateThreshold = 40.0\n"
+            + "  slowCallDurationThreshold = 2s\n"
+            + "  slidingWindowSize = 200\n"
+            + "  slidingWindowType = TIME_BASED\n"
+            + "}";
 
     Config config = ConfigFactory.parseString(configStr);
     CircuitBreakerConfiguration.CircuitBreakerConfigurationBuilder<Object> builder =
@@ -51,7 +51,8 @@ class CircuitBreakerConfigParserTest {
     assertEquals(SlidingWindowType.COUNT_BASED, defaultThresholds.getSlidingWindowType());
 
     // Test service specific thresholds
-    Map<String, CircuitBreakerThresholds> thresholdsMap = configuration.getCircuitBreakerThresholdsMap();
+    Map<String, CircuitBreakerThresholds> thresholdsMap =
+        configuration.getCircuitBreakerThresholdsMap();
     assertNotNull(thresholdsMap);
     assertTrue(thresholdsMap.containsKey("service1"));
 
