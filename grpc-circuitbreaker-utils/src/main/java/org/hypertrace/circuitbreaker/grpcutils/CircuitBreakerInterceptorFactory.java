@@ -9,7 +9,7 @@ import org.hypertrace.circuitbreaker.grpcutils.resilience.ResilienceCircuitBreak
 public class CircuitBreakerInterceptorFactory {
   private final Clock clock;
 
-  CircuitBreakerInterceptor buildInterceptor(CircuitBreakerConfiguration<?> configuration) {
+  public CircuitBreakerInterceptor buildInterceptor(CircuitBreakerConfiguration<?> configuration) {
     return ResilienceCircuitBreakerFactory.getCircuitBreakerInterceptor(configuration, clock);
   }
 }
