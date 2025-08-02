@@ -1,8 +1,8 @@
 plugins {
   `java-library`
   jacoco
-  id("org.hypertrace.publish-plugin")
-  id("org.hypertrace.jacoco-report-plugin")
+  alias(commonLibs.plugins.hypertrace.publish)
+  alias(commonLibs.plugins.hypertrace.jacoco)
 }
 
 tasks.test {
@@ -10,24 +10,15 @@ tasks.test {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.68.3"))
-  api("io.grpc:grpc-context")
-  api("io.grpc:grpc-api")
+  api(commonLibs.grpc.context)
+  api(commonLibs.grpc.api)
+  implementation(projects.grpcContextUtils)
+  implementation(commonLibs.slf4j2.api)
 
-  api(platform("io.netty:netty-bom:4.1.118.Final"))
-  constraints {
-    api("com.google.protobuf:protobuf-java:3.25.5") {
-      because("https://nvd.nist.gov/vuln/detail/CVE-2024-7254")
-    }
-  }
+  annotationProcessor(commonLibs.lombok)
+  compileOnly(commonLibs.lombok)
 
-  implementation(project(":grpc-context-utils"))
-  implementation("org.slf4j:slf4j-api:1.7.36")
-
-  annotationProcessor("org.projectlombok:lombok:1.18.24")
-  compileOnly("org.projectlombok:lombok:1.18.24")
-
-  testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-  testImplementation("org.mockito:mockito-core:5.8.0")
-  testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
+  testImplementation(commonLibs.junit.jupiter)
+  testImplementation(commonLibs.mockito.core)
+  testImplementation(commonLibs.mockito.junit)
 }

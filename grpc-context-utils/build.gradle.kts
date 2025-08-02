@@ -1,8 +1,8 @@
 plugins {
   `java-library`
   jacoco
-  id("org.hypertrace.publish-plugin")
-  id("org.hypertrace.jacoco-report-plugin")
+  alias(commonLibs.plugins.hypertrace.publish)
+  alias(commonLibs.plugins.hypertrace.jacoco)
 }
 
 tasks.test {
@@ -10,27 +10,20 @@ tasks.test {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.68.3"))
-  api(platform("com.fasterxml.jackson:jackson-bom:2.16.0"))
-  constraints {
-    api("com.google.protobuf:protobuf-java:3.25.5") {
-      because("https://nvd.nist.gov/vuln/detail/CVE-2024-7254")
-    }
-  }
-  implementation("io.grpc:grpc-core")
+  implementation(commonLibs.grpc.core)
 
-  implementation("com.auth0:java-jwt:4.4.0")
-  implementation("com.auth0:jwks-rsa:0.22.0")
-  implementation("com.google.guava:guava:32.0.1-jre")
-  implementation("org.slf4j:slf4j-api:1.7.36")
+  implementation(localLibs.auth0.jwt)
+  implementation(localLibs.auth0.jwks.rsa)
+  implementation(commonLibs.guava)
+  implementation(commonLibs.slf4j2.api)
 
-  annotationProcessor("org.projectlombok:lombok:1.18.24")
-  compileOnly("org.projectlombok:lombok:1.18.24")
+  annotationProcessor(commonLibs.lombok)
+  compileOnly(commonLibs.lombok)
 
-  testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-  testImplementation("org.mockito:mockito-core:5.8.0")
-  testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
-  testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.15.2")
-  testAnnotationProcessor("org.projectlombok:lombok:1.18.24")
-  testCompileOnly("org.projectlombok:lombok:1.18.24")
+  testImplementation(commonLibs.junit.jupiter)
+  testImplementation(commonLibs.mockito.core)
+  testImplementation(commonLibs.mockito.junit)
+  testImplementation(commonLibs.jackson.databind)
+  testAnnotationProcessor(commonLibs.lombok)
+  testCompileOnly(commonLibs.lombok)
 }

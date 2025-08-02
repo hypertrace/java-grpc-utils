@@ -1,10 +1,10 @@
 plugins {
   `java-library`
-  id("org.hypertrace.publish-plugin")
+  alias(commonLibs.plugins.hypertrace.publish)
 }
 
 dependencies {
-  api(project(":grpc-context-utils"))
-  api("io.grpc:grpc-api")
-  implementation("com.google.protobuf:protobuf-java-util:3.21.7")
+  api(projects.grpcContextUtils)
+  api(commonLibs.grpc.api)
+  implementation(commonLibs.protobuf.javautil)
 }
