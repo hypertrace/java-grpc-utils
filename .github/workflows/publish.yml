@@ -4,7 +4,6 @@ on:
   release:
     types: 
       - created
-  workflow_dispatch:
 
 jobs:
   publish-artifacts:
@@ -24,5 +23,28 @@ jobs:
           ORG_GRADLE_PROJECT_maven_repo_url: ${{ secrets.HAR_REPO_URL }}
           ORG_GRADLE_PROJECT_maven_user: ${{ secrets.HAR_PUBLISH_USER }}
           ORG_GRADLE_PROJECT_maven_password: ${{ secrets.HAR_PUBLISH_TOKEN }}
+  post-publish-artifacts:
+    runs-on: ubuntu-24.04
+    needs: [ publish-artifacts ]
+    steps:
+      - name: Get Token from Github App
+        uses: tibdex/github-app-token@v2
+        id: generate-token
+        with:
+          app_id: ${{ secrets.GH_CI_APP_ID }}
+          private_key: ${{ secrets.GH_CI_APP_PRIVATE_KEY }}
+          repositories: >-
+            ["hypertrace-bom"]
+      - name: Auto upgrade BOM
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          repository: hypertrace/hypertrace-bom
+          event-type: upgrade-version
+          client-payload: |
+            {
+              "repository": "${{ github.repository }}",
+              "version": "${{ github.ref }}"
+            }
 
 
