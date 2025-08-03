@@ -13,7 +13,7 @@ dependencies {
   implementation(localLibs.resilience4j.circuitbreaker)
   implementation(commonLibs.typesafe.config)
   implementation(commonLibs.guava)
-  implementation(localLibs.jakarta.inject.api)
+  implementation(commonLibs.jakarta.inject.api)
 
   annotationProcessor(commonLibs.lombok)
   compileOnly(commonLibs.lombok)
