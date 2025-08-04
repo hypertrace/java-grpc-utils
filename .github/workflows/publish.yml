@@ -44,7 +44,7 @@ jobs:
           client-payload: |
             {
               "repository": "${{ github.repository }}",
-              "version": "${{ github.ref }}"
+              "version": "${{ github.ref_name }}"
             }
 
 
