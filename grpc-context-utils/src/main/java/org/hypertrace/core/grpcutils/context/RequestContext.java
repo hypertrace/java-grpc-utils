@@ -47,6 +47,12 @@ public class RequestContext {
             FastUUIDGenerator.randomUUID().toString());
   }
 
+  public static RequestContext withRequestId(String tenantId, String requestId) {
+    return new RequestContext()
+        .put(RequestContextConstants.TENANT_ID_HEADER_KEY, tenantId)
+        .put(RequestContextConstants.REQUEST_ID_HEADER_KEY, requestId);
+  }
+
   public static RequestContext fromMetadata(Metadata metadata) {
     RequestContext requestContext = new RequestContext();
 
