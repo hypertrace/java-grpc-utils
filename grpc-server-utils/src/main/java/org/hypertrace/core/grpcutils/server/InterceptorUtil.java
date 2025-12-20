@@ -15,14 +15,16 @@ public class InterceptorUtil {
    */
   public static ServerServiceDefinition wrapInterceptors(BindableService bindableService) {
     return ServerInterceptors.intercept(
-        bindableService, new RequestContextServerInterceptor(), new ThrowableResponseInterceptor());
+        bindableService,
+        new RequestContextLoggingServerInterceptor(),
+        new ThrowableResponseInterceptor());
   }
 
   public static ServerServiceDefinition wrapInterceptors(
       ServerServiceDefinition serviceDefinition) {
     return ServerInterceptors.intercept(
         serviceDefinition,
-        new RequestContextServerInterceptor(),
+        new RequestContextLoggingServerInterceptor(),
         new ThrowableResponseInterceptor());
   }
 }
