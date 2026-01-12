@@ -1,6 +1,8 @@
 package org.hypertrace.core.grpcutils.server;
 
+import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CONTEXT_ID_HEADER_KEY;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.REQUEST_ID_HEADER_KEY;
+import static org.hypertrace.core.grpcutils.context.RequestContextConstants.TENANT_ID_HEADER_KEY;
 
 import io.grpc.Context;
 import io.grpc.Contexts;
@@ -27,6 +29,8 @@ public final class RequestContextLoggingServerInterceptor implements ServerInter
         Optional.ofNullable(RequestContext.CURRENT.get())
             .orElseGet(() -> RequestContext.fromMetadata(metadata));
     Optional<String> opRequestId = currentContext.getHeaderValue(REQUEST_ID_HEADER_KEY);
+    Optional<String> opTenantId = currentContext.getHeaderValue(TENANT_ID_HEADER_KEY);
+    Optional<String> opContextId = currentContext.getHeaderValue(CONTEXT_ID_HEADER_KEY);
     if (opRequestId.isEmpty()) {
       opRequestId = Optional.of(FastUUIDGenerator.randomUUID().toString());
     }
@@ -63,6 +67,8 @@ public final class RequestContextLoggingServerInterceptor implements ServerInter
       public void onMessage(ReqT message) {
         try {
           MDC.put(REQUEST_ID_HEADER_KEY, requestId);
+          opTenantId.ifPresent(s -> MDC.put(TENANT_ID_HEADER_KEY, s));
+          opContextId.ifPresent(s -> MDC.put(CONTEXT_ID_HEADER_KEY, s));
         } catch (Exception e) {
           log.error("Error while setting request context details in MDC params", e);
         }
