@@ -12,6 +12,7 @@ import java.util.Set;
 public class RequestContextConstants {
   public static final String TENANT_ID_HEADER_KEY = "x-tenant-id";
   public static final String REQUEST_ID_HEADER_KEY = "request-id";
+  public static final String CONTEXT_ID_HEADER_KEY = "context-id";
 
   public static final Metadata.Key<String> TENANT_ID_METADATA_KEY =
       Metadata.Key.of(TENANT_ID_HEADER_KEY, ASCII_STRING_MARSHALLER);
@@ -22,6 +23,7 @@ public class RequestContextConstants {
   public static final Set<String> HEADER_PREFIXES_TO_BE_PROPAGATED =
       Set.of(
           TENANT_ID_HEADER_KEY,
+          CONTEXT_ID_HEADER_KEY,
           "X-B3-",
           "grpc-trace-bin",
           "traceparent",
