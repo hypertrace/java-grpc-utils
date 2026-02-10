@@ -13,6 +13,7 @@ public class RequestContextConstants {
   public static final String TENANT_ID_HEADER_KEY = "x-tenant-id";
   public static final String REQUEST_ID_HEADER_KEY = "request-id";
   public static final String CONTEXT_ID_HEADER_KEY = "context-id";
+  public static final String SUPPRESS_USER_TRACKING_HEADER_KEY = "x-suppress-user-tracking";
 
   public static final Metadata.Key<String> TENANT_ID_METADATA_KEY =
       Metadata.Key.of(TENANT_ID_HEADER_KEY, ASCII_STRING_MARSHALLER);
@@ -24,6 +25,7 @@ public class RequestContextConstants {
       Set.of(
           TENANT_ID_HEADER_KEY,
           CONTEXT_ID_HEADER_KEY,
+          SUPPRESS_USER_TRACKING_HEADER_KEY,
           "X-B3-",
           "grpc-trace-bin",
           "traceparent",

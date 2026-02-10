@@ -2,7 +2,9 @@ package org.hypertrace.core.grpcutils.context;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import io.grpc.Metadata;
@@ -250,5 +252,87 @@ public class RequestContextTest {
         List.of(new RequestContextHeader("first", "f-v2")), requestContext.getAllHeaders());
     assertEquals(Optional.of("f-v2"), requestContext.getHeaderValue("first"));
     assertEquals(List.of("f-v2"), requestContext.getAllHeaderValues("first"));
+  }
+
+  @Test
+  void testUserTrackingSuppressedDefault() {
+    RequestContext requestContext = new RequestContext();
+    assertFalse(requestContext.isUserTrackingSuppressed());
+  }
+
+  @Test
+  void testUserTrackingSuppressedWithTrueValue() {
+    RequestContext requestContext =
+        new RequestContext().put(RequestContextConstants.SUPPRESS_USER_TRACKING_HEADER_KEY, "true");
+    assertTrue(requestContext.isUserTrackingSuppressed());
+  }
+
+  @Test
+  void testUserTrackingSuppressedWithFalseValue() {
+    RequestContext requestContext =
+        new RequestContext()
+            .put(RequestContextConstants.SUPPRESS_USER_TRACKING_HEADER_KEY, "false");
+    assertFalse(requestContext.isUserTrackingSuppressed());
+  }
+
+  @Test
+  void testWithUserTrackingSuppressedBoolean() {
+    RequestContext originalContext1 = new RequestContext();
+    RequestContext suppressedContext = originalContext1.withUserTrackingSuppressed(true);
+    assertTrue(suppressedContext.isUserTrackingSuppressed());
+
+    RequestContext originalContext2 = new RequestContext();
+    RequestContext unsuppressedContext = originalContext2.withUserTrackingSuppressed(false);
+    assertFalse(unsuppressedContext.isUserTrackingSuppressed());
+  }
+
+  @Test
+  void testWithUserTrackingSuppressedDefault() {
+    RequestContext originalContext = new RequestContext();
+
+    RequestContext suppressedContext = originalContext.withUserTrackingSuppressed();
+    assertTrue(suppressedContext.isUserTrackingSuppressed());
+  }
+
+  @Test
+  void testWithUserTrackingSuppressedPreservesOtherHeaders() {
+    RequestContext originalContext =
+        new RequestContext()
+            .put(RequestContextConstants.TENANT_ID_HEADER_KEY, "tenant-123")
+            .put("other-header", "other-value");
+
+    RequestContext suppressedContext = originalContext.withUserTrackingSuppressed();
+
+    assertTrue(suppressedContext.isUserTrackingSuppressed());
+    assertEquals(Optional.of("tenant-123"), suppressedContext.getTenantId());
+    assertEquals(Optional.of("other-value"), suppressedContext.getHeaderValue("other-header"));
+  }
+
+  @Test
+  void testWithUserTrackingSuppressedOverridesExisting() {
+    RequestContext originalContext =
+        new RequestContext()
+            .put(RequestContextConstants.SUPPRESS_USER_TRACKING_HEADER_KEY, "false");
+
+    assertFalse(originalContext.isUserTrackingSuppressed());
+
+    RequestContext suppressedContext = originalContext.withUserTrackingSuppressed();
+    assertTrue(suppressedContext.isUserTrackingSuppressed());
+  }
+
+  @Test
+  void testUserTrackingSuppressedHeaderPropagation() {
+    Metadata metadata = new Metadata();
+    metadata.put(
+        Metadata.Key.of(
+            RequestContextConstants.SUPPRESS_USER_TRACKING_HEADER_KEY,
+            Metadata.ASCII_STRING_MARSHALLER),
+        "true");
+    metadata.put(RequestContextConstants.TENANT_ID_METADATA_KEY, "test-tenant");
+
+    RequestContext requestContext = RequestContext.fromMetadata(metadata);
+
+    assertTrue(requestContext.isUserTrackingSuppressed());
+    assertEquals(Optional.of("test-tenant"), requestContext.getTenantId());
   }
 }

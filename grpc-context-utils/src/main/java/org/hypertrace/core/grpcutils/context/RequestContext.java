@@ -3,6 +3,7 @@ package org.hypertrace.core.grpcutils.context;
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static java.util.Objects.requireNonNull;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CACHE_MEANINGFUL_HEADERS;
+import static org.hypertrace.core.grpcutils.context.RequestContextConstants.SUPPRESS_USER_TRACKING_HEADER_KEY;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.TENANT_ID_HEADER_KEY;
 
 import com.google.common.collect.ListMultimap;
@@ -118,6 +119,21 @@ public class RequestContext {
 
   public Optional<String> getRequestId() {
     return this.getHeaderValue(RequestContextConstants.REQUEST_ID_HEADER_KEY);
+  }
+
+  public boolean isUserTrackingSuppressed() {
+    return this.getHeaderValue(SUPPRESS_USER_TRACKING_HEADER_KEY)
+        .map(Boolean::parseBoolean)
+        .orElse(false);
+  }
+
+  public RequestContext withUserTrackingSuppressed(boolean suppressed) {
+    this.removeHeader(SUPPRESS_USER_TRACKING_HEADER_KEY);
+    return this.put(SUPPRESS_USER_TRACKING_HEADER_KEY, String.valueOf(suppressed));
+  }
+
+  public RequestContext withUserTrackingSuppressed() {
+    return this.withUserTrackingSuppressed(true);
   }
 
   private Optional<Jwt> getJwt() {
