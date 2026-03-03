@@ -1,12 +1,13 @@
 package org.hypertrace.core.grpcutils.context;
 
-import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CTX_SCAN_ID_HEADER_KEY;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.REQUEST_ID_HEADER_KEY;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.TENANT_ID_HEADER_KEY;
 
 import io.grpc.Metadata;
 
 public class ScanMetadataBuilder {
+
+  public static final String CTX_SCAN_ID_HEADER_KEY = "x-ctx-scan-id";
 
   public static Metadata build(String tenantId, String requestId, String scanId) {
     Metadata metadata = new Metadata();

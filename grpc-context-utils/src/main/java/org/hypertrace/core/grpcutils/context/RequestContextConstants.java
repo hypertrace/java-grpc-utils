@@ -21,7 +21,6 @@ public class RequestContextConstants {
   public static final String AUTHORIZATION_HEADER = "authorization";
 
   public static final String CTX_HEADER_PREFIX = "x-ctx-";
-  public static final String CTX_SCAN_ID_HEADER_KEY = "x-ctx-scan-id";
 
   /** The values in this set are looked up with case insensitivity. */
   public static final Set<String> HEADER_PREFIXES_TO_BE_PROPAGATED =
