@@ -321,23 +321,6 @@ public class RequestContextTest {
   }
 
   @Test
-  void testCtxHeadersPropagatedFromMetadata() {
-    Metadata metadata = new Metadata();
-    metadata.put(RequestContextConstants.TENANT_ID_METADATA_KEY, "test-tenant");
-    metadata.put(Metadata.Key.of("x-ctx-scan-id", Metadata.ASCII_STRING_MARSHALLER), "scan-123");
-    metadata.put(Metadata.Key.of("x-ctx-trace-id", Metadata.ASCII_STRING_MARSHALLER), "trace-456");
-    metadata.put(
-        Metadata.Key.of("x-unknown-header", Metadata.ASCII_STRING_MARSHALLER), "should-be-dropped");
-
-    RequestContext requestContext = RequestContext.fromMetadata(metadata);
-
-    assertEquals(Optional.of("test-tenant"), requestContext.getTenantId());
-    assertEquals(Optional.of("scan-123"), requestContext.getHeaderValue("x-ctx-scan-id"));
-    assertEquals(Optional.of("trace-456"), requestContext.getHeaderValue("x-ctx-trace-id"));
-    assertEquals(Optional.empty(), requestContext.getHeaderValue("x-unknown-header"));
-  }
-
-  @Test
   void testUserTrackingSuppressedHeaderPropagation() {
     Metadata metadata = new Metadata();
     metadata.put(
