@@ -21,4 +21,5 @@ dependencies {
   testImplementation(commonLibs.junit.jupiter)
   testImplementation(commonLibs.mockito.core)
   testImplementation(commonLibs.mockito.junit)
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.4.14")
 }
