@@ -16,7 +16,7 @@ plugins {
 }
 
 configure<DependencyPluginSettingExtension> {
-  catalogVersion.set("0.3.52")
+  catalogVersion.set("0.3.73")
 }
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
