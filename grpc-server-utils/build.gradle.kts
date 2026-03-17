@@ -14,6 +14,7 @@ dependencies {
   api(commonLibs.grpc.api)
   implementation(projects.grpcContextUtils)
   implementation(commonLibs.slf4j2.api)
+  compileOnly("org.apache.logging.log4j:log4j-core:2.20.0")
 
   annotationProcessor(commonLibs.lombok)
   compileOnly(commonLibs.lombok)
