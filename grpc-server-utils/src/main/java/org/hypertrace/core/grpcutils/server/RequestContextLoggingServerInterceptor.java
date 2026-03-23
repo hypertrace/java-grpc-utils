@@ -72,6 +72,7 @@ public final class RequestContextLoggingServerInterceptor implements ServerInter
           opContextId.ifPresent(s -> MDC.put(CONTEXT_ID_HEADER_KEY, s));
           currentContext.getAllHeaders().stream()
               .filter(header -> header.getName().startsWith(CTX_HEADER_PREFIX))
+              .filter(header -> header.getValue() != null)
               .forEach(header -> MDC.put(header.getName(), header.getValue()));
         } catch (Exception e) {
           log.error("Error while setting request context details in MDC params", e);
