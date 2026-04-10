@@ -6,6 +6,7 @@ import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
 import io.grpc.ClientInterceptor;
+import io.grpc.Context;
 import io.grpc.MethodDescriptor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,7 +16,7 @@ public class TimeoutVerifyingClientInterceptor implements ClientInterceptor {
   @Override
   public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
       MethodDescriptor<ReqT, RespT> methodDescriptor, CallOptions callOptions, Channel channel) {
-    if (isNull(callOptions.getDeadline())) {
+    if (isNull(callOptions.getDeadline()) && isNull(Context.current().getDeadline())) {
       log.warn("Missing deadline for call to method {}", methodDescriptor.getFullMethodName());
     }
 
