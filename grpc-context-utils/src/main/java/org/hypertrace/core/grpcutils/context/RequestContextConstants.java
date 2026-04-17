@@ -20,12 +20,18 @@ public class RequestContextConstants {
 
   public static final String AUTHORIZATION_HEADER = "authorization";
 
+  public static final String CTX_HEADER_PREFIX = "x-ctx-";
+  public static final String CTX_TENANT_ID_KEY = CTX_HEADER_PREFIX + "tenant-id";
+  public static final String CTX_REQUEST_ID_KEY = CTX_HEADER_PREFIX + "request-id";
+  public static final String CTX_CONTEXT_ID_KEY = CTX_HEADER_PREFIX + "id";
+
   /** The values in this set are looked up with case insensitivity. */
   public static final Set<String> HEADER_PREFIXES_TO_BE_PROPAGATED =
       Set.of(
           TENANT_ID_HEADER_KEY,
           CONTEXT_ID_HEADER_KEY,
           SUPPRESS_USER_TRACKING_HEADER_KEY,
+          CTX_HEADER_PREFIX,
           "X-B3-",
           "grpc-trace-bin",
           "traceparent",
