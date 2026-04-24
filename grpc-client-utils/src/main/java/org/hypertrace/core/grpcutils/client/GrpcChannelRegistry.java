@@ -90,6 +90,9 @@ public class GrpcChannelRegistry {
     if (config.getMaxInboundMessageSize() != null) {
       builder.maxInboundMessageSize(config.getMaxInboundMessageSize());
     }
+    if (config.getServiceConfig() != null) {
+      builder.defaultServiceConfig(config.getServiceConfig()).enableRetry();
+    }
     this.registryConfig.getDefaultInterceptors().forEach(builder::intercept);
     return builder.intercept(config.getClientInterceptors()).build();
   }

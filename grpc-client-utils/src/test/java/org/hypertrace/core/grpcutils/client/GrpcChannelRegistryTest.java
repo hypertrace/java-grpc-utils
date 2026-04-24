@@ -23,6 +23,7 @@ import io.grpc.Deadline.Ticker;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -143,6 +144,21 @@ class GrpcChannelRegistryTest {
     Channel firstChannel = firstRegistry.forSecureAddress("foo", 1000);
 
     assertSame(firstChannel, new GrpcChannelRegistry(firstRegistry).forSecureAddress("foo", 1000));
+  }
+
+  @Test
+  void createsDistinctChannelsForDifferentServiceConfigs() {
+    Map<String, Object> serviceConfig = Map.of("methodConfig", List.of());
+    Channel channelWithServiceConfig =
+        this.channelRegistry.forSecureAddress(
+            "foo", 1000, GrpcChannelConfig.builder().serviceConfig(serviceConfig).build());
+
+    assertNotNull(channelWithServiceConfig);
+    assertNotSame(channelWithServiceConfig, this.channelRegistry.forSecureAddress("foo", 1000));
+    assertSame(
+        channelWithServiceConfig,
+        this.channelRegistry.forSecureAddress(
+            "foo", 1000, GrpcChannelConfig.builder().serviceConfig(serviceConfig).build()));
   }
 
   @Test
