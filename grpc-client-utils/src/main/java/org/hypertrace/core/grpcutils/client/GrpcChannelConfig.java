@@ -14,4 +14,6 @@ public class GrpcChannelConfig {
   @Singular List<ClientInterceptor> clientInterceptors;
 
   GrpcServiceConfig serviceConfig;
+
+  boolean enableRetry;
 }

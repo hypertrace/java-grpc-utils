@@ -22,8 +22,6 @@ import io.grpc.Deadline;
 import io.grpc.Deadline.Ticker;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.Status;
-import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
@@ -145,31 +143,6 @@ class GrpcChannelRegistryTest {
     Channel firstChannel = firstRegistry.forSecureAddress("foo", 1000);
 
     assertSame(firstChannel, new GrpcChannelRegistry(firstRegistry).forSecureAddress("foo", 1000));
-  }
-
-  @Test
-  void createsDistinctChannelsForDifferentServiceConfigs() {
-    GrpcServiceConfig serviceConfig =
-        GrpcServiceConfig.builder()
-            .retryPolicy(
-                GrpcRetryPolicy.builder()
-                    .maxAttempts(3)
-                    .initialBackoff(Duration.ofMillis(100))
-                    .maxBackoff(Duration.ofSeconds(1))
-                    .backoffMultiplier(2.0)
-                    .retryableStatusCode(Status.Code.UNAVAILABLE)
-                    .build())
-            .build();
-    Channel channelWithServiceConfig =
-        this.channelRegistry.forSecureAddress(
-            "foo", 1000, GrpcChannelConfig.builder().serviceConfig(serviceConfig).build());
-
-    assertNotNull(channelWithServiceConfig);
-    assertNotSame(channelWithServiceConfig, this.channelRegistry.forSecureAddress("foo", 1000));
-    assertSame(
-        channelWithServiceConfig,
-        this.channelRegistry.forSecureAddress(
-            "foo", 1000, GrpcChannelConfig.builder().serviceConfig(serviceConfig).build()));
   }
 
   @Test

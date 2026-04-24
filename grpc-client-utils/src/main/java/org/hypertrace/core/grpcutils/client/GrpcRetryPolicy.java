@@ -2,6 +2,7 @@ package org.hypertrace.core.grpcutils.client;
 
 import static java.util.stream.Collectors.toUnmodifiableList;
 
+import com.google.protobuf.util.Durations;
 import io.grpc.Status;
 import java.time.Duration;
 import java.util.List;
@@ -27,15 +28,11 @@ public class GrpcRetryPolicy {
 
   Map<String, Object> toMap() {
     return Map.of(
-        MAX_ATTEMPTS,
-        (double) maxAttempts,
-        INITIAL_BACKOFF,
-        initialBackoff.toMillis() / 1000.0 + "s",
-        MAX_BACKOFF,
-        maxBackoff.toMillis() / 1000.0 + "s",
-        BACKOFF_MULTIPLIER,
-        backoffMultiplier,
+        MAX_ATTEMPTS, (double) maxAttempts,
+        INITIAL_BACKOFF, Durations.toString(Durations.fromMillis(initialBackoff.toMillis())),
+        MAX_BACKOFF, Durations.toString(Durations.fromMillis(maxBackoff.toMillis())),
+        BACKOFF_MULTIPLIER, backoffMultiplier,
         RETRYABLE_STATUS_CODES,
-        retryableStatusCodes.stream().map(Enum::name).collect(toUnmodifiableList()));
+            retryableStatusCodes.stream().map(Enum::name).collect(toUnmodifiableList()));
   }
 }
