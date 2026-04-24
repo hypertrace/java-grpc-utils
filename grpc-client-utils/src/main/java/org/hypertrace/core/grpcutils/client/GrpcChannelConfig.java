@@ -2,7 +2,6 @@ package org.hypertrace.core.grpcutils.client;
 
 import io.grpc.ClientInterceptor;
 import java.util.List;
-import java.util.Map;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
@@ -14,5 +13,5 @@ public class GrpcChannelConfig {
 
   @Singular List<ClientInterceptor> clientInterceptors;
 
-  Map<String, Object> serviceConfig;
+  GrpcServiceConfig serviceConfig;
 }
