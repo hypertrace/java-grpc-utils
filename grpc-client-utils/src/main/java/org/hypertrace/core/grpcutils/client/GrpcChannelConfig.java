@@ -12,4 +12,8 @@ public class GrpcChannelConfig {
   Integer maxInboundMessageSize;
 
   @Singular List<ClientInterceptor> clientInterceptors;
+
+  GrpcServiceConfig serviceConfig;
+
+  boolean enableRetry;
 }

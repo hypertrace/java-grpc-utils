@@ -14,12 +14,14 @@ dependencies {
   implementation(projects.grpcContextUtils)
   implementation(commonLibs.slf4j2.api)
   implementation(commonLibs.grpc.core)
+  implementation(commonLibs.protobuf.javautil)
 
   annotationProcessor(commonLibs.lombok)
   compileOnly(commonLibs.lombok)
 
   testImplementation(commonLibs.junit.jupiter)
   testImplementation(commonLibs.mockito.core)
+  testImplementation(commonLibs.grpc.stub)
   testRuntimeOnly(commonLibs.grpc.netty)
 }
 
