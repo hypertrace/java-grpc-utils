@@ -1,6 +1,10 @@
 package org.hypertrace.core.grpcutils.server;
 
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CONTEXT_ID_HEADER_KEY;
+import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CTX_CONTEXT_ID_KEY;
+import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CTX_HEADER_PREFIX;
+import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CTX_REQUEST_ID_KEY;
+import static org.hypertrace.core.grpcutils.context.RequestContextConstants.CTX_TENANT_ID_KEY;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.REQUEST_ID_HEADER_KEY;
 import static org.hypertrace.core.grpcutils.context.RequestContextConstants.TENANT_ID_HEADER_KEY;
 
@@ -66,9 +70,13 @@ public final class RequestContextLoggingServerInterceptor implements ServerInter
       @Override
       public void onMessage(ReqT message) {
         try {
-          MDC.put(REQUEST_ID_HEADER_KEY, requestId);
-          opTenantId.ifPresent(s -> MDC.put(TENANT_ID_HEADER_KEY, s));
-          opContextId.ifPresent(s -> MDC.put(CONTEXT_ID_HEADER_KEY, s));
+          MDC.put(CTX_REQUEST_ID_KEY, requestId);
+          opTenantId.ifPresent(s -> MDC.put(CTX_TENANT_ID_KEY, s));
+          opContextId.ifPresent(s -> MDC.put(CTX_CONTEXT_ID_KEY, s));
+          currentContext.getAllHeaders().stream()
+              .filter(header -> header.getName().startsWith(CTX_HEADER_PREFIX))
+              .filter(header -> header.getValue() != null)
+              .forEach(header -> MDC.put(header.getName(), header.getValue()));
         } catch (Exception e) {
           log.error("Error while setting request context details in MDC params", e);
         }
