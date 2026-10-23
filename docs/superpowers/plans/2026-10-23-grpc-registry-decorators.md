@@ -29,6 +29,7 @@
 - Quoted service names are read with `ConfigUtil.joinPath`.
 - A service is protected only when the root flag is true and that service block is enabled. An omitted service `enabled` inherits true. A missing service block passes through.
 - Callers compose decorators. This library does not wrap timeout and circuit breaker together.
+- Every Gradle command in this worktree must include `-Pversion=0.13.23`. The linked worktree does not expose git tags to the version plugin. Without that property the BOM replaces `projects.grpcContextUtils` with external `grpc-context-utils:0.13.22`, and dependency locking fails.
 
 ---
 
@@ -56,7 +57,7 @@ Use Mockito to mock `GrpcChannelRegistry` and `ManagedChannel`. The interceptor 
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `./gradlew :grpc-client-utils:test --tests org.hypertrace.core.grpcutils.client.InterceptingChannelRegistryTest`
+Run: `./gradlew -Pversion=0.13.23 :grpc-client-utils:test --tests org.hypertrace.core.grpcutils.client.InterceptingChannelRegistryTest`
 
 Expected: compile failure because `InterceptingChannelRegistry` does not exist.
 
@@ -72,7 +73,7 @@ Keep one why-comment on `ForAddress`: inherited `forAddress` calls `forPlaintext
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `./gradlew :grpc-client-utils:test --tests org.hypertrace.core.grpcutils.client.InterceptingChannelRegistryTest`
+Run: `./gradlew -Pversion=0.13.23 :grpc-client-utils:test --tests org.hypertrace.core.grpcutils.client.InterceptingChannelRegistryTest`
 
 Expected: PASS.
 
@@ -116,7 +117,7 @@ Parse config with `ConfigFactory.parseString`. Use a mock delegate registry and 
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `./gradlew :grpc-client-utils:test --tests org.hypertrace.core.grpcutils.client.TimeoutChannelRegistryTest`
+Run: `./gradlew -Pversion=0.13.23 :grpc-client-utils:test --tests org.hypertrace.core.grpcutils.client.TimeoutChannelRegistryTest`
 
 Expected: compile failure because `TimeoutChannelRegistry` does not exist.
 
@@ -128,7 +129,7 @@ Add `api(commonLibs.typesafe.config)` to `grpc-client-utils/build.gradle.kts`.
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `./gradlew :grpc-client-utils:test --tests org.hypertrace.core.grpcutils.client.TimeoutChannelRegistryTest`
+Run: `./gradlew -Pversion=0.13.23 :grpc-client-utils:test --tests org.hypertrace.core.grpcutils.client.TimeoutChannelRegistryTest`
 
 Expected: PASS.
 
@@ -169,7 +170,7 @@ Do not push.
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `./gradlew :grpc-circuitbreaker-utils:test --tests org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfigParserTest`
+Run: `./gradlew -Pversion=0.13.23 :grpc-circuitbreaker-utils:test --tests org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerConfigParserTest`
 
 Expected: compile failure because `getFailureStatusCodes` does not exist.
 
@@ -181,7 +182,7 @@ Change the Typesafe dependency from `implementation` to `api`.
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `./gradlew :grpc-circuitbreaker-utils:test`
+Run: `./gradlew -Pversion=0.13.23 :grpc-circuitbreaker-utils:test`
 
 Expected: the new test and the existing resilience tests pass.
 
@@ -226,7 +227,7 @@ Set `slowCallDurationThreshold = 1h` in these tests so latency cannot open the b
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `./gradlew :grpc-circuitbreaker-utils:test --tests org.hypertrace.circuitbreaker.grpcutils.ServiceCircuitBreakerInterceptorTest`
+Run: `./gradlew -Pversion=0.13.23 :grpc-circuitbreaker-utils:test --tests org.hypertrace.circuitbreaker.grpcutils.ServiceCircuitBreakerInterceptorTest`
 
 Expected: compile failure because `forService` does not exist.
 
@@ -246,7 +247,7 @@ Keep the why-comment that `getConfig(key)` treats dots as path separators, so se
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `./gradlew :grpc-circuitbreaker-utils:test --tests org.hypertrace.circuitbreaker.grpcutils.ServiceCircuitBreakerInterceptorTest`
+Run: `./gradlew -Pversion=0.13.23 :grpc-circuitbreaker-utils:test --tests org.hypertrace.circuitbreaker.grpcutils.ServiceCircuitBreakerInterceptorTest`
 
 Expected: PASS.
 
@@ -286,7 +287,7 @@ Assert:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `./gradlew :grpc-circuitbreaker-utils:test --tests org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerChannelRegistryTest`
+Run: `./gradlew -Pversion=0.13.23 :grpc-circuitbreaker-utils:test --tests org.hypertrace.circuitbreaker.grpcutils.CircuitBreakerChannelRegistryTest`
 
 Expected: compile failure because `CircuitBreakerChannelRegistry` does not exist.
 
@@ -314,7 +315,7 @@ public final class CircuitBreakerChannelRegistry {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `./gradlew :grpc-client-utils:test :grpc-circuitbreaker-utils:test`
+Run: `./gradlew -Pversion=0.13.23 :grpc-client-utils:test :grpc-circuitbreaker-utils:test`
 
 Expected: PASS for both modules.
 
