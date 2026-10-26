@@ -11,7 +11,7 @@ dependencies {
 
   implementation(commonLibs.slf4j2.api)
   implementation(localLibs.resilience4j.circuitbreaker)
-  implementation(commonLibs.typesafe.config)
+  api(commonLibs.typesafe.config)
   implementation(commonLibs.guava)
   implementation(commonLibs.jakarta.inject.api)
 

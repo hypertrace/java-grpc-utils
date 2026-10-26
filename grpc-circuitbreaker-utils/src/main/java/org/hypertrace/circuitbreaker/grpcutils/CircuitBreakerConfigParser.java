@@ -1,6 +1,10 @@
 package org.hypertrace.circuitbreaker.grpcutils;
 
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
+import io.grpc.Status;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,6 +30,7 @@ public class CircuitBreakerConfigParser {
   private static final String PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE =
       "permittedNumberOfCallsInHalfOpenState";
   private static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
+  private static final String FAILURE_STATUS_CODES = "failureStatusCodes";
   public static final String ENABLED = "enabled";
   public static final String DEFAULT_THRESHOLDS = "defaultThresholds";
   private static final Set<String> NON_THRESHOLD_KEYS = Set.of(ENABLED, DEFAULT_THRESHOLDS);
@@ -97,7 +102,25 @@ public class CircuitBreakerConfigParser {
       builder.enabled(config.getBoolean(ENABLED));
     }
 
+    if (config.hasPath(FAILURE_STATUS_CODES)) {
+      builder.failureStatusCodes(
+          parseFailureStatusCodes(config.getStringList(FAILURE_STATUS_CODES)));
+    }
+
     return builder.build();
+  }
+
+  // An unknown name must fail startup. Ignoring it would protect the wrong calls.
+  private static Set<Status.Code> parseFailureStatusCodes(List<String> names) {
+    Set<Status.Code> codes = EnumSet.noneOf(Status.Code.class);
+    for (String name : names) {
+      try {
+        codes.add(Status.Code.valueOf(name));
+      } catch (IllegalArgumentException exception) {
+        throw new ConfigException.BadValue(FAILURE_STATUS_CODES, name);
+      }
+    }
+    return Set.copyOf(codes);
   }
 
   public static CircuitBreakerThresholds buildCircuitBreakerDefaultThresholds() {
