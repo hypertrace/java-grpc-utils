@@ -21,6 +21,7 @@ com.google.j2objc:j2objc-annotations:2.8=compileClasspath
 com.google.j2objc:j2objc-annotations:3.0.0=runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 com.google.protobuf:protobuf-java-util:3.25.8=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 com.google.protobuf:protobuf-java:3.25.8=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.typesafe:config:1.4.2=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 io.grpc:grpc-api:1.75.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 io.grpc:grpc-bom:1.75.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 io.grpc:grpc-context:1.75.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath

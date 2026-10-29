@@ -1,11 +1,13 @@
 package org.hypertrace.circuitbreaker.grpcutils;
 
+import io.grpc.Status;
 import java.time.Duration;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class CircuitBreakerThresholds {
   // Percentage of failures to trigger OPEN state
   @Builder.Default float failureRateThreshold = 50f;
@@ -24,6 +26,11 @@ public class CircuitBreakerThresholds {
   // CLOSE or OPEN again
   @Builder.Default int permittedNumberOfCallsInHalfOpenState = 5;
   @Builder.Default boolean enabled = true;
+
+  @Builder.Default
+  Set<Status.Code> failureStatusCodes =
+      Set.of(
+          Status.Code.DEADLINE_EXCEEDED, Status.Code.UNAVAILABLE, Status.Code.RESOURCE_EXHAUSTED);
 
   public enum SlidingWindowType {
     COUNT_BASED,

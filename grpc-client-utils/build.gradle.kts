@@ -10,6 +10,7 @@ dependencies {
   api(commonLibs.grpc.context)
   api(commonLibs.grpc.api)
   api(commonLibs.grpc.inprocess)
+  api(commonLibs.typesafe.config)
 
   implementation(projects.grpcContextUtils)
   implementation(commonLibs.slf4j2.api)

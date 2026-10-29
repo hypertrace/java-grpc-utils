@@ -7,11 +7,12 @@ plugins {
 
 dependencies {
   api(commonLibs.grpc.api)
+  api(commonLibs.typesafe.config)
   api(projects.grpcContextUtils)
+  api(projects.grpcClientUtils)
 
   implementation(commonLibs.slf4j2.api)
   implementation(localLibs.resilience4j.circuitbreaker)
-  implementation(commonLibs.typesafe.config)
   implementation(commonLibs.guava)
   implementation(commonLibs.jakarta.inject.api)
 
