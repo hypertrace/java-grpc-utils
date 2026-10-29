@@ -31,32 +31,35 @@ public final class InterceptingChannelRegistry extends GrpcChannelRegistry {
   private final Map<ManagedChannel, ManagedChannel> interceptedChannels =
       Collections.synchronizedMap(new IdentityHashMap<>());
 
-  private InterceptingChannelRegistry(GrpcChannelRegistry delegate, ClientInterceptor interceptor) {
+  private InterceptingChannelRegistry(
+      final GrpcChannelRegistry delegate, final ClientInterceptor interceptor) {
     this.delegate = delegate;
     this.interceptor = interceptor;
   }
 
   @Override
-  public ManagedChannel forSecureAddress(String host, int port) {
+  public ManagedChannel forSecureAddress(final String host, final int port) {
     return this.intercept(this.delegate.forSecureAddress(host, port));
   }
 
   @Override
-  public ManagedChannel forSecureAddress(String host, int port, GrpcChannelConfig config) {
+  public ManagedChannel forSecureAddress(
+      final String host, final int port, final GrpcChannelConfig config) {
     return this.intercept(this.delegate.forSecureAddress(host, port, config));
   }
 
   @Override
-  public ManagedChannel forPlaintextAddress(String host, int port) {
+  public ManagedChannel forPlaintextAddress(final String host, final int port) {
     return this.intercept(this.delegate.forPlaintextAddress(host, port));
   }
 
   @Override
-  public ManagedChannel forPlaintextAddress(String host, int port, GrpcChannelConfig config) {
+  public ManagedChannel forPlaintextAddress(
+      final String host, final int port, final GrpcChannelConfig config) {
     return this.intercept(this.delegate.forPlaintextAddress(host, port, config));
   }
 
-  private ManagedChannel intercept(ManagedChannel channel) {
+  private ManagedChannel intercept(final ManagedChannel channel) {
     return this.interceptedChannels.computeIfAbsent(
         channel, raw -> new InterceptedManagedChannel(raw, this.interceptor));
   }
@@ -71,14 +74,15 @@ public final class InterceptingChannelRegistry extends GrpcChannelRegistry {
 
     private final Channel interceptedChannel;
 
-    private InterceptedManagedChannel(ManagedChannel delegate, ClientInterceptor interceptor) {
+    private InterceptedManagedChannel(
+        final ManagedChannel delegate, final ClientInterceptor interceptor) {
       this.delegate = delegate;
       this.interceptedChannel = ClientInterceptors.intercept(delegate, interceptor);
     }
 
     @Override
     public <ReqT, RespT> ClientCall<ReqT, RespT> newCall(
-        MethodDescriptor<ReqT, RespT> methodDescriptor, CallOptions callOptions) {
+        final MethodDescriptor<ReqT, RespT> methodDescriptor, final CallOptions callOptions) {
       return this.interceptedChannel.newCall(methodDescriptor, callOptions);
     }
 

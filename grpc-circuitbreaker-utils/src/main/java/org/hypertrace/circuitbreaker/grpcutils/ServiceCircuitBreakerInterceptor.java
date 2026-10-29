@@ -26,14 +26,15 @@ public final class ServiceCircuitBreakerInterceptor implements ClientInterceptor
   private final Map<String, Set<Status.Code>> failureStatusCodesByService;
   private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-  static ClientInterceptor create(Map<String, CircuitBreakerThresholds> thresholdsByService) {
+  static ClientInterceptor create(final Map<String, CircuitBreakerThresholds> thresholdsByService) {
     if (thresholdsByService == null || thresholdsByService.isEmpty()) {
+      log.debug("No service circuit breakers configured");
       return passthrough();
     }
-    Map<String, CircuitBreakerConfig> circuitBreakerConfigs = new HashMap<>();
-    Map<String, Set<Status.Code>> failureStatusCodesByService = new HashMap<>();
-    for (Map.Entry<String, CircuitBreakerThresholds> entry : thresholdsByService.entrySet()) {
-      CircuitBreakerThresholds thresholds = entry.getValue();
+    final Map<String, CircuitBreakerConfig> circuitBreakerConfigs = new HashMap<>();
+    final Map<String, Set<Status.Code>> failureStatusCodesByService = new HashMap<>();
+    for (final Map.Entry<String, CircuitBreakerThresholds> entry : thresholdsByService.entrySet()) {
+      final CircuitBreakerThresholds thresholds = entry.getValue();
       if (!thresholds.isEnabled()) {
         log.debug("Service circuit breaker disabled for {}", entry.getKey());
         continue;
@@ -52,8 +53,8 @@ public final class ServiceCircuitBreakerInterceptor implements ClientInterceptor
     return new ServiceCircuitBreakerInterceptor(Map.of(), Map.of());
   }
 
-  // Resilience4j records onError as a success when recordException returns false.
-  private static CircuitBreakerConfig toCircuitBreakerConfig(CircuitBreakerThresholds thresholds) {
+  private static CircuitBreakerConfig toCircuitBreakerConfig(
+      final CircuitBreakerThresholds thresholds) {
     final Set<Status.Code> failureStatusCodes = thresholds.getFailureStatusCodes();
     return CircuitBreakerConfig.custom()
         .failureRateThreshold(thresholds.getFailureRateThreshold())
@@ -65,6 +66,7 @@ public final class ServiceCircuitBreakerInterceptor implements ClientInterceptor
         .permittedNumberOfCallsInHalfOpenState(
             thresholds.getPermittedNumberOfCallsInHalfOpenState())
         .minimumNumberOfCalls(thresholds.getMinimumNumberOfCalls())
+        // Returning false makes Resilience4j count this onError as a success.
         .recordException(
             throwable ->
                 throwable instanceof StatusRuntimeException
@@ -74,7 +76,7 @@ public final class ServiceCircuitBreakerInterceptor implements ClientInterceptor
   }
 
   private static CircuitBreakerConfig.SlidingWindowType slidingWindowType(
-      CircuitBreakerThresholds.SlidingWindowType slidingWindowType) {
+      final CircuitBreakerThresholds.SlidingWindowType slidingWindowType) {
     switch (slidingWindowType) {
       case COUNT_BASED:
         return CircuitBreakerConfig.SlidingWindowType.COUNT_BASED;
@@ -85,16 +87,33 @@ public final class ServiceCircuitBreakerInterceptor implements ClientInterceptor
   }
 
   private ServiceCircuitBreakerInterceptor(
-      Map<String, CircuitBreakerConfig> circuitBreakerConfigs,
-      Map<String, Set<Status.Code>> failureStatusCodesByService) {
+      final Map<String, CircuitBreakerConfig> circuitBreakerConfigs,
+      final Map<String, Set<Status.Code>> failureStatusCodesByService) {
     this.circuitBreakerConfigs = circuitBreakerConfigs;
     this.failureStatusCodesByService = failureStatusCodesByService;
     this.circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+    circuitBreakerConfigs.forEach(this::registerStateChangeLog);
+  }
+
+  private void registerStateChangeLog(final String serviceName, final CircuitBreakerConfig config) {
+    final CircuitBreaker circuitBreaker =
+        circuitBreakerRegistry.circuitBreaker(serviceName, config);
+    circuitBreaker
+        .getEventPublisher()
+        .onStateTransition(
+            event ->
+                log.debug(
+                    "Circuit breaker {} changed from {} to {}",
+                    event.getCircuitBreakerName(),
+                    event.getStateTransition().getFromState(),
+                    event.getStateTransition().getToState()));
   }
 
   @Override
   public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-      MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
+      final MethodDescriptor<ReqT, RespT> method,
+      final CallOptions callOptions,
+      final Channel next) {
     final String serviceName = method.getServiceName();
     final CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigs.get(serviceName);
     if (circuitBreakerConfig == null) {
@@ -121,18 +140,18 @@ public final class ServiceCircuitBreakerInterceptor implements ClientInterceptor
   }
 
   private <ReqT, RespT> ClientCall<ReqT, RespT> recordingCall(
-      ClientCall<ReqT, RespT> delegate,
-      CircuitBreaker circuitBreaker,
-      Set<Status.Code> failureStatusCodes) {
+      final ClientCall<ReqT, RespT> delegate,
+      final CircuitBreaker circuitBreaker,
+      final Set<Status.Code> failureStatusCodes) {
     return new ForwardingClientCall.SimpleForwardingClientCall<>(delegate) {
       @Override
-      public void start(Listener<RespT> responseListener, Metadata headers) {
+      public void start(final Listener<RespT> responseListener, final Metadata headers) {
         final long startedAtNanos = System.nanoTime();
         super.start(
             new ForwardingClientCallListener.SimpleForwardingClientCallListener<>(
                 responseListener) {
               @Override
-              public void onClose(Status status, Metadata trailers) {
+              public void onClose(final Status status, final Metadata trailers) {
                 final long elapsedNanos = System.nanoTime() - startedAtNanos;
                 if (status.isOk() || !failureStatusCodes.contains(status.getCode())) {
                   log.trace(

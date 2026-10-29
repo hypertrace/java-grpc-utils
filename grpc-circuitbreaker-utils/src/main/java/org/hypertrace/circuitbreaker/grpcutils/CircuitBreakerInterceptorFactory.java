@@ -12,12 +12,12 @@ import org.hypertrace.circuitbreaker.grpcutils.resilience.ResilienceCircuitBreak
 public class CircuitBreakerInterceptorFactory {
   private final Clock clock;
 
-  public static ClientInterceptor forService(Config rootConfig) {
+  public static ClientInterceptor forService(final Config rootConfig) {
     return forService(CircuitBreakerConfigParser.parseServiceThresholds(rootConfig));
   }
 
   public static ClientInterceptor forService(
-      Map<String, CircuitBreakerThresholds> thresholdsByService) {
+      final Map<String, CircuitBreakerThresholds> thresholdsByService) {
     return ServiceCircuitBreakerInterceptor.create(thresholdsByService);
   }
 

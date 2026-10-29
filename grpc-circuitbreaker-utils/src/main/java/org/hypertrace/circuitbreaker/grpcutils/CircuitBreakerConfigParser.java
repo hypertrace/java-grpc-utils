@@ -69,27 +69,28 @@ public class CircuitBreakerConfigParser {
    * empty map. Defaults come from {@link CircuitBreakerThresholds}; config only overlays fields
    * that are present.
    */
-  public static Map<String, CircuitBreakerThresholds> parseServiceThresholds(Config rootConfig) {
+  public static Map<String, CircuitBreakerThresholds> parseServiceThresholds(
+      final Config rootConfig) {
     if (rootConfig == null || !rootConfig.hasPath(CIRCUIT_BREAKER_CONFIG)) {
       log.debug("circuit.breaker.config is absent; no service circuit breakers installed");
       return Map.of();
     }
-    Config config = rootConfig.getConfig(CIRCUIT_BREAKER_CONFIG);
+    final Config config = rootConfig.getConfig(CIRCUIT_BREAKER_CONFIG);
     if (!config.hasPath(ENABLED) || !config.getBoolean(ENABLED)) {
       log.debug("circuit.breaker.config is disabled; no service circuit breakers installed");
       return Map.of();
     }
-    CircuitBreakerThresholds defaults =
+    final CircuitBreakerThresholds defaults =
         config.hasPath(DEFAULT_THRESHOLDS)
             ? overlay(buildCircuitBreakerDefaultThresholds(), config.getConfig(DEFAULT_THRESHOLDS))
             : buildCircuitBreakerDefaultThresholds();
-    Map<String, CircuitBreakerThresholds> thresholdsByService = new LinkedHashMap<>();
-    for (String serviceName : config.root().keySet()) {
+    final Map<String, CircuitBreakerThresholds> thresholdsByService = new LinkedHashMap<>();
+    for (final String serviceName : config.root().keySet()) {
       if (ENABLED.equals(serviceName) || DEFAULT_THRESHOLDS.equals(serviceName)) {
         continue;
       }
       // getConfig(key) treats dots as path separators, so service names are read with joinPath.
-      CircuitBreakerThresholds thresholds =
+      final CircuitBreakerThresholds thresholds =
           overlay(defaults, config.getConfig(ConfigUtil.joinPath(serviceName)));
       if (!thresholds.isEnabled()) {
         log.debug("Service circuit breaker disabled for {}", serviceName);
@@ -100,7 +101,8 @@ public class CircuitBreakerConfigParser {
     return Map.copyOf(thresholdsByService);
   }
 
-  public static CircuitBreakerThresholds overlay(CircuitBreakerThresholds base, Config overrides) {
+  public static CircuitBreakerThresholds overlay(
+      final CircuitBreakerThresholds base, final Config overrides) {
     return applyOverrides(base.toBuilder(), overrides).build();
   }
 
@@ -109,7 +111,7 @@ public class CircuitBreakerConfigParser {
   }
 
   private static CircuitBreakerThresholds.CircuitBreakerThresholdsBuilder applyOverrides(
-      CircuitBreakerThresholds.CircuitBreakerThresholdsBuilder builder, Config config) {
+      final CircuitBreakerThresholds.CircuitBreakerThresholdsBuilder builder, final Config config) {
 
     if (config.hasPath(FAILURE_RATE_THRESHOLD)) {
       builder.failureRateThreshold((float) config.getDouble(FAILURE_RATE_THRESHOLD));

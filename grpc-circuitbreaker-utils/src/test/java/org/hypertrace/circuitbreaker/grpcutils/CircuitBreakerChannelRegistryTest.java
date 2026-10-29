@@ -46,7 +46,7 @@ class CircuitBreakerChannelRegistryTest {
   void nullConfigReturnsTheSameRegistry() {
     GrpcChannelRegistry registry = mock(GrpcChannelRegistry.class);
 
-    assertSame(registry, CircuitBreakerChannelRegistry.wrap(registry, null));
+    assertSame(registry, CircuitBreakerChannelRegistry.wrap(registry, (Config) null));
   }
 
   @Test
