@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Value;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class CircuitBreakerThresholds {
   // Percentage of failures to trigger OPEN state
   @Builder.Default float failureRateThreshold = 50f;

@@ -2,8 +2,10 @@ package org.hypertrace.circuitbreaker.grpcutils;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigUtil;
 import io.grpc.Status;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +33,7 @@ public class CircuitBreakerConfigParser {
       "permittedNumberOfCallsInHalfOpenState";
   private static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
   private static final String FAILURE_STATUS_CODES = "failureStatusCodes";
+  static final String CIRCUIT_BREAKER_CONFIG = "circuit.breaker.config";
   public static final String ENABLED = "enabled";
   public static final String DEFAULT_THRESHOLDS = "defaultThresholds";
   private static final Set<String> NON_THRESHOLD_KEYS = Set.of(ENABLED, DEFAULT_THRESHOLDS);
@@ -61,9 +64,52 @@ public class CircuitBreakerConfigParser {
     return builder;
   }
 
+  /**
+   * Service-keyed thresholds for {@code circuit.breaker.config}. An absent or disabled block is an
+   * empty map. Defaults come from {@link CircuitBreakerThresholds}; config only overlays fields
+   * that are present.
+   */
+  public static Map<String, CircuitBreakerThresholds> parseServiceThresholds(Config rootConfig) {
+    if (rootConfig == null || !rootConfig.hasPath(CIRCUIT_BREAKER_CONFIG)) {
+      log.debug("circuit.breaker.config is absent; no service circuit breakers installed");
+      return Map.of();
+    }
+    Config config = rootConfig.getConfig(CIRCUIT_BREAKER_CONFIG);
+    if (!config.hasPath(ENABLED) || !config.getBoolean(ENABLED)) {
+      log.debug("circuit.breaker.config is disabled; no service circuit breakers installed");
+      return Map.of();
+    }
+    CircuitBreakerThresholds defaults =
+        config.hasPath(DEFAULT_THRESHOLDS)
+            ? overlay(buildCircuitBreakerDefaultThresholds(), config.getConfig(DEFAULT_THRESHOLDS))
+            : buildCircuitBreakerDefaultThresholds();
+    Map<String, CircuitBreakerThresholds> thresholdsByService = new LinkedHashMap<>();
+    for (String serviceName : config.root().keySet()) {
+      if (ENABLED.equals(serviceName) || DEFAULT_THRESHOLDS.equals(serviceName)) {
+        continue;
+      }
+      // getConfig(key) treats dots as path separators, so service names are read with joinPath.
+      CircuitBreakerThresholds thresholds =
+          overlay(defaults, config.getConfig(ConfigUtil.joinPath(serviceName)));
+      if (!thresholds.isEnabled()) {
+        log.debug("Service circuit breaker disabled for {}", serviceName);
+        continue;
+      }
+      thresholdsByService.put(serviceName, thresholds);
+    }
+    return Map.copyOf(thresholdsByService);
+  }
+
+  public static CircuitBreakerThresholds overlay(CircuitBreakerThresholds base, Config overrides) {
+    return applyOverrides(base.toBuilder(), overrides).build();
+  }
+
   private static CircuitBreakerThresholds buildCircuitBreakerThresholds(Config config) {
-    CircuitBreakerThresholds.CircuitBreakerThresholdsBuilder builder =
-        CircuitBreakerThresholds.builder();
+    return overlay(buildCircuitBreakerDefaultThresholds(), config);
+  }
+
+  private static CircuitBreakerThresholds.CircuitBreakerThresholdsBuilder applyOverrides(
+      CircuitBreakerThresholds.CircuitBreakerThresholdsBuilder builder, Config config) {
 
     if (config.hasPath(FAILURE_RATE_THRESHOLD)) {
       builder.failureRateThreshold((float) config.getDouble(FAILURE_RATE_THRESHOLD));
@@ -107,7 +153,7 @@ public class CircuitBreakerConfigParser {
           parseFailureStatusCodes(config.getStringList(FAILURE_STATUS_CODES)));
     }
 
-    return builder.build();
+    return builder;
   }
 
   // An unknown name must fail startup. Ignoring it would protect the wrong calls.

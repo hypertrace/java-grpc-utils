@@ -1,8 +1,5 @@
 package org.hypertrace.circuitbreaker.grpcutils;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigUtil;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -20,110 +17,44 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public final class ServiceCircuitBreakerInterceptor implements ClientInterceptor {
-
-  private static final String CONFIG_PATH = "circuit.breaker.config";
-  private static final String SYNTHETIC_SERVICE_KEY = "service";
 
   private final Map<String, CircuitBreakerConfig> circuitBreakerConfigs;
   private final Map<String, Set<Status.Code>> failureStatusCodesByService;
   private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-  static ClientInterceptor create(Config rootConfig) {
-    if (!rootConfig.hasPath(CONFIG_PATH)) {
+  static ClientInterceptor create(Map<String, CircuitBreakerThresholds> thresholdsByService) {
+    if (thresholdsByService == null || thresholdsByService.isEmpty()) {
       return passthrough();
     }
-    Config config = rootConfig.getConfig(CONFIG_PATH);
-    if (!config.hasPath(CircuitBreakerConfigParser.ENABLED)
-        || !config.getBoolean(CircuitBreakerConfigParser.ENABLED)) {
+    Map<String, CircuitBreakerConfig> circuitBreakerConfigs = new HashMap<>();
+    Map<String, Set<Status.Code>> failureStatusCodesByService = new HashMap<>();
+    for (Map.Entry<String, CircuitBreakerThresholds> entry : thresholdsByService.entrySet()) {
+      CircuitBreakerThresholds thresholds = entry.getValue();
+      if (!thresholds.isEnabled()) {
+        log.debug("Service circuit breaker disabled for {}", entry.getKey());
+        continue;
+      }
+      circuitBreakerConfigs.put(entry.getKey(), toCircuitBreakerConfig(thresholds));
+      failureStatusCodesByService.put(entry.getKey(), thresholds.getFailureStatusCodes());
+    }
+    if (circuitBreakerConfigs.isEmpty()) {
       return passthrough();
     }
-    return configured(config);
+    return new ServiceCircuitBreakerInterceptor(
+        Map.copyOf(circuitBreakerConfigs), Map.copyOf(failureStatusCodesByService));
   }
 
   private static ServiceCircuitBreakerInterceptor passthrough() {
     return new ServiceCircuitBreakerInterceptor(Map.of(), Map.of());
   }
 
-  private static ServiceCircuitBreakerInterceptor configured(Config config) {
-    Config defaults = libraryDefaults();
-    if (config.hasPath(CircuitBreakerConfigParser.DEFAULT_THRESHOLDS)) {
-      defaults =
-          config.getConfig(CircuitBreakerConfigParser.DEFAULT_THRESHOLDS).withFallback(defaults);
-    }
-
-    Map<String, CircuitBreakerConfig> circuitBreakerConfigs = new HashMap<>();
-    Map<String, Set<Status.Code>> failureStatusCodesByService = new HashMap<>();
-    for (String serviceName : config.root().keySet()) {
-      if (CircuitBreakerConfigParser.ENABLED.equals(serviceName)
-          || CircuitBreakerConfigParser.DEFAULT_THRESHOLDS.equals(serviceName)) {
-        continue;
-      }
-      // getConfig(key) treats dots as path separators, so service names are read with joinPath.
-      Config resolved = config.getConfig(ConfigUtil.joinPath(serviceName)).withFallback(defaults);
-      CircuitBreakerThresholds thresholds = parseServiceThresholds(resolved);
-      if (!thresholds.isEnabled()) {
-        continue;
-      }
-      circuitBreakerConfigs.put(serviceName, toCircuitBreakerConfig(thresholds));
-      failureStatusCodesByService.put(serviceName, thresholds.getFailureStatusCodes());
-    }
-    return new ServiceCircuitBreakerInterceptor(
-        Map.copyOf(circuitBreakerConfigs), Map.copyOf(failureStatusCodesByService));
-  }
-
-  private static Config libraryDefaults() {
-    CircuitBreakerThresholds defaults = CircuitBreakerThresholds.builder().build();
-    String failureStatuses =
-        defaults.getFailureStatusCodes().stream()
-            .map(Status.Code::name)
-            .collect(Collectors.joining(", "));
-    return ConfigFactory.parseString(
-        "failureRateThreshold = "
-            + defaults.getFailureRateThreshold()
-            + "\n"
-            + "slowCallRateThreshold = "
-            + defaults.getSlowCallRateThreshold()
-            + "\n"
-            + "slowCallDurationThreshold = "
-            + defaults.getSlowCallDurationThreshold().toMillis()
-            + "ms\n"
-            + "slidingWindowType = "
-            + defaults.getSlidingWindowType().name()
-            + "\n"
-            + "slidingWindowSize = "
-            + defaults.getSlidingWindowSize()
-            + "\n"
-            + "waitDurationInOpenState = "
-            + defaults.getWaitDurationInOpenState().toMillis()
-            + "ms\n"
-            + "minimumNumberOfCalls = "
-            + defaults.getMinimumNumberOfCalls()
-            + "\n"
-            + "permittedNumberOfCallsInHalfOpenState = "
-            + defaults.getPermittedNumberOfCallsInHalfOpenState()
-            + "\n"
-            + "enabled = "
-            + defaults.isEnabled()
-            + "\n"
-            + "failureStatusCodes = ["
-            + failureStatuses
-            + "]\n");
-  }
-
-  private static CircuitBreakerThresholds parseServiceThresholds(Config resolvedServiceConfig) {
-    return CircuitBreakerConfigParser.parseConfig(
-            resolvedServiceConfig.atKey(SYNTHETIC_SERVICE_KEY))
-        .build()
-        .getCircuitBreakerThresholdsMap()
-        .get(SYNTHETIC_SERVICE_KEY);
-  }
-
-  // onError is counted as a success when this predicate returns false.
+  // Resilience4j records onError as a success when recordException returns false.
   private static CircuitBreakerConfig toCircuitBreakerConfig(CircuitBreakerThresholds thresholds) {
-    Set<Status.Code> failureStatusCodes = thresholds.getFailureStatusCodes();
+    final Set<Status.Code> failureStatusCodes = thresholds.getFailureStatusCodes();
     return CircuitBreakerConfig.custom()
         .failureRateThreshold(thresholds.getFailureRateThreshold())
         .slowCallRateThreshold(thresholds.getSlowCallRateThreshold())
@@ -164,21 +95,22 @@ public final class ServiceCircuitBreakerInterceptor implements ClientInterceptor
   @Override
   public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
       MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
-    String serviceName = method.getServiceName();
-    CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigs.get(serviceName);
+    final String serviceName = method.getServiceName();
+    final CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigs.get(serviceName);
     if (circuitBreakerConfig == null) {
       return next.newCall(method, callOptions);
     }
 
-    CircuitBreaker circuitBreaker =
+    final CircuitBreaker circuitBreaker =
         circuitBreakerRegistry.circuitBreaker(serviceName, circuitBreakerConfig);
     if (!circuitBreaker.tryAcquirePermission()) {
+      log.debug("Circuit breaker is open for {}; rejecting the call", serviceName);
       throw Status.RESOURCE_EXHAUSTED
           .withDescription("Circuit breaker is open for " + serviceName)
           .asRuntimeException();
     }
 
-    ClientCall<ReqT, RespT> delegate;
+    final ClientCall<ReqT, RespT> delegate;
     try {
       delegate = next.newCall(method, callOptions);
     } catch (RuntimeException exception) {
@@ -195,16 +127,26 @@ public final class ServiceCircuitBreakerInterceptor implements ClientInterceptor
     return new ForwardingClientCall.SimpleForwardingClientCall<>(delegate) {
       @Override
       public void start(Listener<RespT> responseListener, Metadata headers) {
-        long startedAtNanos = System.nanoTime();
+        final long startedAtNanos = System.nanoTime();
         super.start(
             new ForwardingClientCallListener.SimpleForwardingClientCallListener<>(
                 responseListener) {
               @Override
               public void onClose(Status status, Metadata trailers) {
-                long elapsedNanos = System.nanoTime() - startedAtNanos;
+                final long elapsedNanos = System.nanoTime() - startedAtNanos;
                 if (status.isOk() || !failureStatusCodes.contains(status.getCode())) {
+                  log.trace(
+                      "Recording success for {} after {} ns with status {}",
+                      circuitBreaker.getName(),
+                      elapsedNanos,
+                      status.getCode());
                   circuitBreaker.onSuccess(elapsedNanos, TimeUnit.NANOSECONDS);
                 } else {
+                  log.debug(
+                      "Recording failure for {} after {} ns with status {}",
+                      circuitBreaker.getName(),
+                      elapsedNanos,
+                      status.getCode());
                   circuitBreaker.onError(
                       elapsedNanos, TimeUnit.NANOSECONDS, status.asRuntimeException());
                 }

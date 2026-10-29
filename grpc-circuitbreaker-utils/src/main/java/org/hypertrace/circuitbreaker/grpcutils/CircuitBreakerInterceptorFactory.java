@@ -4,6 +4,7 @@ import com.typesafe.config.Config;
 import io.grpc.ClientInterceptor;
 import jakarta.inject.Inject;
 import java.time.Clock;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.hypertrace.circuitbreaker.grpcutils.resilience.ResilienceCircuitBreakerFactory;
 
@@ -12,7 +13,12 @@ public class CircuitBreakerInterceptorFactory {
   private final Clock clock;
 
   public static ClientInterceptor forService(Config rootConfig) {
-    return ServiceCircuitBreakerInterceptor.create(rootConfig);
+    return forService(CircuitBreakerConfigParser.parseServiceThresholds(rootConfig));
+  }
+
+  public static ClientInterceptor forService(
+      Map<String, CircuitBreakerThresholds> thresholdsByService) {
+    return ServiceCircuitBreakerInterceptor.create(thresholdsByService);
   }
 
   public CircuitBreakerInterceptor buildInterceptor(CircuitBreakerConfiguration<?> configuration) {

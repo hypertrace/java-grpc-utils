@@ -16,11 +16,14 @@ import lombok.experimental.Delegate;
 public final class InterceptingChannelRegistry extends GrpcChannelRegistry {
 
   public static GrpcChannelRegistry wrap(
-      GrpcChannelRegistry registry, ClientInterceptor interceptor) {
+      final GrpcChannelRegistry registry, final ClientInterceptor interceptor) {
     return new InterceptingChannelRegistry(
         Objects.requireNonNull(registry), Objects.requireNonNull(interceptor));
   }
 
+  // Lombok skips a delegate method only when this class overrides it. forAddress is not
+  // overridden: the superclass implementation calls forPlaintextAddress. Delegating it would
+  // return the raw channel and skip the interceptor.
   @Delegate(excludes = ForAddress.class)
   private final GrpcChannelRegistry delegate;
 
@@ -58,23 +61,13 @@ public final class InterceptingChannelRegistry extends GrpcChannelRegistry {
         channel, raw -> new InterceptedManagedChannel(raw, this.interceptor));
   }
 
-  // The inherited forAddress calls forPlaintextAddress, so delegating it would return the raw
-  // channel and skip the interceptor.
   private interface ForAddress {
     ManagedChannel forAddress(String host, int port);
-
-    ManagedChannel forSecureAddress(String host, int port);
-
-    ManagedChannel forSecureAddress(String host, int port, GrpcChannelConfig config);
-
-    ManagedChannel forPlaintextAddress(String host, int port);
-
-    ManagedChannel forPlaintextAddress(String host, int port, GrpcChannelConfig config);
   }
 
   private static final class InterceptedManagedChannel extends ManagedChannel {
-    @Delegate(excludes = InterceptedCall.class)
-    private final ManagedChannel delegate;
+    // Overridden methods are not delegated. shutdown and shutdownNow return this wrapper.
+    @Delegate private final ManagedChannel delegate;
 
     private final Channel interceptedChannel;
 
@@ -105,17 +98,5 @@ public final class InterceptingChannelRegistry extends GrpcChannelRegistry {
       this.delegate.shutdownNow();
       return this;
     }
-  }
-
-  // shutdown and shutdownNow must return this wrapper, not the raw delegate channel.
-  private interface InterceptedCall {
-    <ReqT, RespT> ClientCall<ReqT, RespT> newCall(
-        MethodDescriptor<ReqT, RespT> methodDescriptor, CallOptions callOptions);
-
-    String authority();
-
-    ManagedChannel shutdown();
-
-    ManagedChannel shutdownNow();
   }
 }
